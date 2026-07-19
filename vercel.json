@@ -1,4 +1,16 @@
 {
+  "functions": {
+    "api/index.py": {
+      "includeFiles": [
+        "routes/**",
+        "templates/**",
+        "static/**",
+        "app.py",
+        "extensions.py",
+        "models.py"
+      ]
+    }
+  },
   "rewrites": [
     {
       "source": "/(.*)",
