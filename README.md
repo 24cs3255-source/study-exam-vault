@@ -1,4 +1,4 @@
-# ⟨ QuestBank /⟩ — College Question Bank
+# ⟨ EXAM STUDY VAULT /⟩ — College Question Bank
 
 A full-stack Flask application for managing and serving college question papers
 with an anime-inspired glassmorphism UI, aurora effects, and dynamic filtering.
