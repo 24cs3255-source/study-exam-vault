@@ -1,0 +1,675 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard — {{ student.display_name or student.username }}{% endblock %}
+
+{% block content %}
+<style>
+  .dash-page {
+    padding: 7rem 2rem 6rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Profile Header */
+  .dash-profile {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--edge);
+    border-radius: 24px;
+    padding: 2rem;
+    margin-bottom: 2.5rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: fadeSlideUp 0.5s ease both;
+  }
+
+  .dash-avatar {
+    width: 80px; height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 850;
+    color: #fff;
+    box-shadow: 0 8px 24px var(--primary-glow);
+    flex-shrink: 0;
+  }
+
+  .dash-profile-info {
+    flex: 1;
+  }
+
+  .dash-profile-info h1 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-hi);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .dash-profile-meta {
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    margin-top: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .dash-logout-btn {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--apple-red);
+    background: rgba(255, 69, 58, 0.08);
+    border: 1px solid rgba(255, 69, 58, 0.2);
+    padding: 0.35rem 0.85rem;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .dash-logout-btn:hover { background: rgba(255, 69, 58, 0.15); border-color: rgba(255, 69, 58, 0.3); }
+
+  /* Quick Actions */
+  .dash-links {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+  }
+  
+  .dash-link-btn {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-hi);
+    background: var(--card);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    padding: 0.65rem 1.2rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .dash-link-btn:hover {
+    background: var(--edge);
+    border-color: var(--edge-active);
+    color: var(--text-hi);
+    transform: translateY(-1px);
+  }
+
+  /* Stats Row */
+  .dash-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--edge);
+    border-radius: 20px;
+    padding: 1.5rem 1.25rem;
+    text-align: center;
+    transition: all 0.3s;
+    animation: fadeSlideUp 0.5s ease both;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+  .stat-card:nth-child(2) { animation-delay: 0.05s; }
+  .stat-card:nth-child(3) { animation-delay: 0.1s; }
+  .stat-card:nth-child(4) { animation-delay: 0.15s; }
+
+  .stat-card:hover {
+    border-color: var(--edge-active);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px var(--primary-glow);
+  }
+
+  .stat-value {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--apple-purple), var(--apple-blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-lo);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.3rem;
+  }
+
+  /* Section Title */
+  .dash-section-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-hi);
+    margin-bottom: 1.2rem;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Badges */
+  .dash-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 3rem;
+  }
+
+  .badge-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--card);
+    border: 1px solid var(--edge);
+    border-radius: 14px;
+    padding: 0.55rem 1rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-mid);
+    transition: all 0.2s;
+  }
+
+  .badge-pill.earned {
+    background: var(--primary-glow);
+    border-color: var(--edge-active);
+    color: var(--text-hi);
+    box-shadow: 0 4px 12px var(--primary-glow);
+  }
+
+  .badge-pill.locked {
+    opacity: 0.45;
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .badge-pill .badge-icon { font-size: 1.15rem; }
+
+  /* Dual column layout */
+  .dash-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 768px) {
+    .dash-columns { grid-template-columns: 1fr; }
+  }
+
+  /* Activity Feed */
+  .activity-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--card);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    font-size: 0.84rem;
+    color: var(--text-mid);
+    line-height: 1.5;
+  }
+
+  .activity-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  .activity-detail { flex: 1; }
+
+  .activity-time {
+    font-size: 0.7rem;
+    color: var(--text-lo);
+    white-space: nowrap;
+    align-self: center;
+  }
+
+  .activity-points {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--apple-blue);
+  }
+
+  /* Saved Papers Grid */
+  .saved-papers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.85rem;
+  }
+
+  .saved-paper-card {
+    background: var(--card);
+    border: 1px solid var(--edge);
+    border-radius: 14px;
+    padding: 1rem;
+    transition: all 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .saved-paper-card:hover {
+    border-color: var(--edge-active);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--primary-glow);
+  }
+
+  .saved-paper-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 750;
+    color: var(--text-hi);
+    margin-bottom: 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .saved-paper-meta {
+    font-size: 0.73rem;
+    color: var(--text-lo);
+  }
+
+  .empty-state-msg {
+    font-size: 0.85rem;
+    color: var(--text-lo);
+    text-align: center;
+    padding: 2.5rem 1rem;
+    font-style: italic;
+    background: var(--card);
+    border: 1px dashed var(--edge);
+    border-radius: 14px;
+  }
+
+  .badge-completed {
+    background: rgba(52, 199, 89, 0.12);
+    color: var(--apple-green);
+    border-left: 2px solid var(--apple-green);
+  }
+
+  .badge-inprogress {
+    background: rgba(255, 149, 0, 0.12);
+    color: var(--apple-orange);
+    border-left: 2px solid var(--apple-orange);
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<div class="dash-page">
+
+  <!-- ── Profile Header ── -->
+  <div class="dash-profile">
+    <div class="dash-avatar" data-color="{{ student.avatar_color }}">
+      {{ student.get_initials() }}
+    </div>
+    <div class="dash-profile-info">
+      <h1>{{ student.display_name or student.username }}</h1>
+      <div class="dash-profile-meta">
+        <span>@{{ student.username }}</span>
+        <span>•</span>
+        <span>{{ student.email }}</span>
+        <span>•</span>
+        <span>Joined {{ student.created_at.strftime('%d %b %Y') }}</span>
+        <a href="/student/logout" class="dash-logout-btn">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Quick Actions ── -->
+  <div class="dash-links">
+    <a href="/explore" class="dash-link-btn">🔍 Explore Papers</a>
+    <a href="/contribute" class="dash-link-btn">📤 Upload Paper</a>
+  </div>
+
+  <!-- ── Stats Cards ── -->
+  <div class="dash-stats">
+    <div class="stat-card">
+      <div class="stat-value">{{ student.points }}</div>
+      <div class="stat-label">Total Points</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ bookmark_count }}</div>
+      <div class="stat-label">Papers Saved</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ discussion_count }}</div>
+      <div class="stat-label">Discussions</div>
+    </div>
+  </div>
+
+  <!-- ── Dual Columns: Activity + Saved Papers ── -->
+  <div class="dash-columns">
+    <!-- Activity Timeline -->
+    <div>
+      <div class="dash-section-title">📊 Recent Activity</div>
+      <div class="activity-feed">
+        {% if activities %}
+          {% for act in activities %}
+          <div class="activity-item">
+            <span class="activity-icon">
+              {% if act.activity_type == 'badge' %}🏅
+              {% elif act.activity_type == 'bookmark' %}⭐
+              {% elif act.activity_type == 'discussion' %}💬
+              {% elif act.activity_type == 'contribution' %}📤
+              {% elif act.activity_type == 'annotation' %}📝
+              {% else %}✨{% endif %}
+            </span>
+            <div class="activity-detail">
+              {{ act.detail }}
+              {% if act.points_earned > 0 %}
+                <span class="activity-points">+{{ act.points_earned }} pts</span>
+              {% endif %}
+            </div>
+            <span class="activity-time">{{ act.created_at }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state-msg">No activity logs recorded.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Saved Papers -->
+    <div>
+      <div class="dash-section-title">⭐ Saved Papers ({{ bookmark_count }})</div>
+      {% if saved_papers %}
+        <div class="saved-papers-grid">
+          {% for paper in saved_papers %}
+          <a href="/view/{{ paper.id }}" target="_blank" class="saved-paper-card">
+            <div class="saved-paper-title">{{ paper.subject_name }}</div>
+            <div class="saved-paper-meta">
+              {{ paper.subject_code }} • {{ paper.exam_type }} • {{ paper.year }}
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state-msg">No papers saved yet. Click the bookmark star on any paper card to save it!</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Downloaded Papers ── -->
+  <div class="dash-section-title" style="margin-top: 3rem;">📂 Downloaded Questions ({{ downloaded_papers|length }})</div>
+  {% if downloaded_papers %}
+    <div class="saved-papers-grid" id="downloaded-papers-container">
+      {% for paper in downloaded_papers %}
+      <div class="saved-paper-card" id="download-card-{{ paper.id }}" style="position:relative; display:flex; flex-direction:column; justify-content:space-between; min-height:100px; padding-right:2.8rem; cursor:default;">
+        <a href="/view/{{ paper.id }}" target="_blank" style="text-decoration:none; display:block;">
+          <div class="saved-paper-title">{{ paper.subject_name }}</div>
+          <div class="saved-paper-meta">
+            {{ paper.subject_code }} &middot; {{ paper.exam_type }} &middot; {{ paper.year }}
+          </div>
+        </a>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.6rem; border-top:1px solid var(--edge); padding-top:0.5rem;">
+          <a href="/download/{{ paper.id }}" class="dash-logout-btn" style="color:var(--apple-blue); background:var(--primary-glow); border-color:var(--edge); font-size:0.68rem; padding:0.2rem 0.5rem; text-decoration:none;">
+            📥 Re-download
+          </a>
+        </div>
+        
+        <button onclick="deleteDownloadHistory(event, this)" data-id="{{ paper.id }}" style="position:absolute; right:0.75rem; top:0.75rem; background:transparent; border:none; color:var(--text-lo); cursor:pointer; outline:none; font-size:0.95rem; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:6px; transition:all 0.2s;" onmouseover="this.style.color='var(--apple-blue)'; this.style.background='var(--primary-glow)';" onmouseout="this.style.color='var(--text-lo)'; this.style.background='transparent';" title="Delete Download Log">
+          🗑️
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state-msg" style="padding:2.5rem; text-align:center;">
+      No download history records yet.<br>
+      <a href="/papers" style="color:var(--apple-blue); text-decoration:none; font-weight:600; font-size:0.8rem; margin-top:0.5rem; display:inline-block;">Browse and Download papers &rarr;</a>
+    </div>
+  {% endif %}
+
+  <!-- ── Mock Exam Attempts ── -->
+  <div class="dash-section-title" style="margin-top: 3rem;">📝 Mock Exam Practice History</div>
+  {% if mock_attempts %}
+    <div class="saved-papers-grid" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));">
+      {% for attempt in mock_attempts %}
+      <div class="saved-paper-card" id="mock-card-{{ attempt.id }}" style="position:relative; display:flex; flex-direction:column; justify-content:space-between; min-height:130px; cursor:default;">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; margin-bottom:0.5rem;">
+            <span class="badge {{ 'badge-completed' if attempt.is_submitted else 'badge-inprogress' }}" style="font-size:0.6rem; padding:0.15rem 0.4rem; border-radius:4px; text-transform:uppercase; font-weight:700;">
+              {{ 'Completed' if attempt.is_submitted else 'In Progress' }}
+            </span>
+            <div style="display:flex; align-items:center; gap:0.4rem;">
+              <span style="font-size:0.68rem; color:var(--text-lo);">{{ attempt.created_at }}</span>
+              <button onclick="deleteMockAttempt(event, this)" data-id="{{ attempt.id }}" style="background:transparent; border:none; color:var(--text-lo); cursor:pointer; font-size:0.78rem; display:flex; align-items:center; justify-content:center; padding:0.1rem; border-radius:4px; transition:color 0.2s;" onmouseover="this.style.color='var(--apple-blue)';" onmouseout="this.style.color='var(--text-lo)';" title="Delete attempt">
+                🗑️
+              </button>
+            </div>
+          </div>
+          <div class="saved-paper-title" style="white-space:normal; font-size:0.85rem; line-height:1.45; margin-bottom:0.15rem; font-weight:700;">
+            {{ attempt.paper.subject_name }}
+          </div>
+          <div class="saved-paper-meta">
+            {{ attempt.paper.subject_code }} &middot; {{ attempt.paper.exam_type }} &middot; {{ attempt.paper.year }}
+          </div>
+        </div>
+        
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.75rem; border-top:1px solid var(--edge); padding-top:0.6rem;">
+          <span style="font-size:0.72rem; color:var(--text-mid);">
+            ⏱ {% if attempt.time_spent >= 3600 %}{{ (attempt.time_spent / 3600)|int }}h {% endif %}{{ ((attempt.time_spent % 3600) / 60)|int }}m spent
+          </span>
+          {% if attempt.is_submitted %}
+            <a href="/student/mock/result/{{ attempt.id }}" class="dash-logout-btn" style="color:var(--apple-blue); background:var(--primary-glow); border-color:var(--edge); font-size:0.7rem; padding:0.25rem 0.65rem; text-decoration:none;">
+              👁 View solutions
+            </a>
+          {% else %}
+            <a href="/student/mock/{{ attempt.paper_id }}" class="dash-logout-btn" style="color:var(--apple-purple); background:var(--primary-glow); border-color:var(--edge-active); font-size:0.7rem; padding:0.25rem 0.65rem; text-decoration:none;">
+              ▶ Resume practice
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state-msg" style="padding:2.5rem; text-align:center;">
+      You haven't practiced any mock exams yet.<br>
+      <a href="/papers" style="color:var(--apple-blue); text-decoration:none; font-weight:600; font-size:0.8rem; margin-top:0.5rem; display:inline-block;">Select a Question Paper to Begin &rarr;</a>
+    </div>
+  {% endif %}
+
+</div>
+
+<script>
+// Sync localStorage bookmarks to server when dashboard loads
+(async function syncBookmarks() {
+  const localBookmarks = JSON.parse(localStorage.getItem('bookmarked_papers') || '[]');
+  if (localBookmarks.length === 0) return;
+
+  try {
+    const res = await fetch('/api/student/bookmarks/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: localBookmarks })
+    });
+    const data = await res.json();
+    if (data.success && data.synced > 0) {
+      console.log(`Synced ${data.synced} bookmarks to server.`);
+    }
+  } catch(e) {
+    console.error('Bookmark sync error:', e);
+  }
+})();
+
+function showToastNotification(msg) {
+  if (!document.getElementById('toast-style-def')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'toast-style-def';
+    styleEl.textContent = `
+      .toast-popup {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: rgba(13, 19, 32, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-left: 4px solid var(--apple-blue);
+        border-radius: 12px;
+        padding: 0.8rem 1.2rem;
+        color: var(--text-hi);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.82rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        z-index: 99999;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+        transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .toast-popup.show {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = 'toast-popup';
+  toast.innerHTML = `<span>✨</span> <span>${msg}</span>`;
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.classList.add('show'), 50);
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+async function deleteDownloadHistory(e, elementOrId) {
+  let paperId = elementOrId;
+  if (typeof elementOrId === 'object' && elementOrId.getAttribute) {
+    paperId = elementOrId.getAttribute('data-id');
+  }
+  e.preventDefault();
+  if (!confirm("Are you sure you want to remove this paper from your download history?")) return;
+  try {
+    const res = await fetch(`/api/student/downloads/delete/${paperId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token() }}'
+      }
+    });
+    const data = await res.json();
+    if (data.success) {
+      const card = document.getElementById(`download-card-${paperId}`);
+      if (card) {
+        card.style.transition = 'opacity 0.3s, transform 0.3s';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+          card.remove();
+          const container = document.getElementById('downloaded-papers-container');
+          if (container && container.children.length === 0) {
+            window.location.reload();
+          }
+        }, 300);
+      }
+      showToastNotification("Download history deleted successfully.");
+    } else {
+      alert("Failed to delete download record.");
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function deleteMockAttempt(e, elementOrId) {
+  let attemptId = elementOrId;
+  if (typeof elementOrId === 'object' && elementOrId.getAttribute) {
+    attemptId = elementOrId.getAttribute('data-id');
+  }
+  e.preventDefault();
+  if (!confirm("Are you sure you want to delete this mock exam practice attempt?")) return;
+  try {
+    const res = await fetch(`/api/student/mock/delete/${attemptId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token() }}'
+      }
+    });
+    const data = await res.json();
+    if (data.success) {
+      const card = document.getElementById(`mock-card-${attemptId}`);
+      if (card) {
+        card.style.transition = 'opacity 0.3s, transform 0.3s';
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+          card.remove();
+        }, 300);
+      }
+      showToastNotification("Mock exam practice deleted successfully.");
+    } else {
+      alert("Failed to delete mock attempt.");
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// Prevent back button from exiting dashboard without confirmation
+(function() {
+  window.history.pushState({ noBackExits: true }, "", window.location.href);
+  window.addEventListener('popstate', function(event) {
+    window.history.pushState({ noBackExits: true }, "", window.location.href);
+    if (typeof confirmLogout === 'function') {
+      confirmLogout('/student/logout', 'Student Portal');
+    } else {
+      let confirmLogoutModal = document.getElementById('qhLogoutModal');
+      if (confirmLogoutModal) confirmLogoutModal.style.display = 'flex';
+    }
+  });
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.dash-avatar').forEach(el => {
+    const color = el.getAttribute('data-color');
+    el.style.background = color || 'linear-gradient(135deg, var(--apple-purple), var(--apple-blue))';
+  });
+});
+</script>
+{% endblock %}

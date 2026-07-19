@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block title %}Student Registration{% endblock %}
+
+{% block content %}
+<style>
+  .auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 1.5rem 3rem;
+    position: relative;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 460px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.5);
+    animation: fadeSlideUp 0.5s ease both;
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .auth-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #34c759, var(--apple-blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 24px rgba(52, 199, 89, 0.3);
+    font-size: 1.5rem;
+  }
+
+  .auth-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-align: center;
+    color: var(--text-hi);
+    margin-bottom: 0.4rem;
+  }
+
+  .auth-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .auth-form { display: flex; flex-direction: column; gap: 1rem; }
+
+  .auth-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem; /* increased spacing between columns */
+  }
+
+  /* Add vertical spacing between stacked fields */
+  .auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 0.5rem; /* space above each field */
+  }
+
+  .auth-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .auth-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    color: var(--text-hi);
+    padding: 0.75rem 1rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.22s, box-shadow 0.22s, background 0.22s;
+  }
+  .auth-input::placeholder { color: var(--text-lo); }
+  .auth-input:focus {
+    border-color: var(--apple-blue);
+    background: rgba(0, 0, 0, 0.45);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+  }
+
+  .auth-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .auth-btn {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #34c759, var(--apple-blue));
+    border: none;
+    border-radius: 12px;
+    padding: 0.85rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 16px rgba(52, 199, 89, 0.3);
+  }
+  .auth-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(52, 199, 89, 0.4);
+  }
+
+  .auth-error {
+    background: rgba(255, 69, 58, 0.12);
+    border: 1px solid rgba(255, 69, 58, 0.3);
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    font-size: 0.82rem;
+    color: #ff6b6b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .auth-footer {
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    margin-top: 1.5rem;
+  }
+  .auth-footer a {
+    color: var(--apple-blue);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+  .auth-footer a:hover { color: var(--apple-purple); }
+
+  .auth-hint {
+    font-size: 0.72rem;
+    color: var(--text-lo);
+    margin-top: 0.15rem;
+  }
+
+  @media (max-width: 520px) {
+    .auth-row { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-icon">🎓</div>
+    <h1 class="auth-title">Join EXAM-STUDY-VAULT</h1>
+    <p class="auth-subtitle">Create your student account to unlock bookmarks, discussions, badges, and more</p>
+
+    {% if error %}
+    <div class="auth-error">
+      <span>⚠️</span> {{ error }}
+    </div>
+    {% endif %}
+
+    <form class="auth-form" method="POST" action="/student/register">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="auth-field">
+          <label class="auth-label" for="username">Username *</label>
+          <input type="text" id="username" name="username" class="auth-input"
+                 placeholder="e.g. vijay_2024" required autofocus
+                 minlength="3" maxlength="80" />
+          <span class="auth-hint">Min 3 characters, lowercase</span>
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="display_name">Display Name</label>
+          <input type="text" id="display_name" name="display_name" class="auth-input"
+                 placeholder="e.g. Vijay Kumar" maxlength="100" />
+        </div>
+
+      <div class="auth-field">
+        <label class="auth-label" for="email">Email *</label>
+        <input type="email" id="email" name="email" class="auth-input"
+               placeholder="your.email@college.edu" required />
+      </div>
+
+      <div class="auth-field">
+        <label class="auth-label" for="department">Department *</label>
+        <select id="department" name="department" class="auth-input" style="background: rgba(8, 12, 20, 0.45); border: 1px solid rgba(255, 255, 255, 0.08); color: var(--text-hi); font-family: 'Inter', sans-serif; cursor: pointer; outline: none;" required>
+          <option value="" disabled selected>Select your department</option>
+          <option value="CS">Computer Science (CS)</option>
+          <option value="BCA">Computer Applications (BCA)</option>
+          <option value="BA">Business Administration (BA)</option>
+          <option value="BOTANY">Botany</option>
+          <option value="PHYSICS">Physics</option>
+          <option value="CHEMISTRY">Chemistry</option>
+          <option value="MATHEMATICS">Mathematics</option>
+          <option value="ENGLISH">English</option>
+          <option value="COMMERCE">Commerce</option>
+          <option value="ECONOMICS">Economics</option>
+        </select>
+      </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="password">Password *</label>
+          <input type="password" id="password" name="password" class="auth-input"
+                 placeholder="Min 6 characters" required minlength="6" />
+        </div>
+
+        <div class="auth-field">
+          <label class="auth-label" for="confirm_password">Confirm Password *</label>
+          <input type="password" id="confirm_password" name="confirm_password" class="auth-input"
+                 placeholder="Re-enter password" required minlength="6" />
+        </div>
+
+      <button type="submit" class="auth-btn">🚀 Create Account</button>
+    </form>
+
+    <div class="auth-footer">
+      Already have an account? <a href="/student/login">Sign in</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

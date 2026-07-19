@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+{% block title %}CONTRIBUTE PAPER — EXAM-STUDY-VAULT{% endblock %}
+
+{% block content %}
+<style>
+  /* Theme variables mapped to page wrapper */
+  .contrib-wrap {
+    --primary-light: var(--primary-glow);
+    --text-dim: var(--text-lo);
+    --surface: var(--card);
+    --surface-hover: var(--edge-active);
+    --border: var(--edge);
+    --border-active: var(--edge-active);
+    --input-bg: rgba(0, 0, 0, 0.25);
+    --input-focus-bg: rgba(0, 0, 0, 0.4);
+    --drop-zone-bg: rgba(0, 0, 0, 0.15);
+    --drop-zone-hover-bg: rgba(0, 0, 0, 0.25);
+  }
+
+  [data-theme="royal"] .contrib-wrap {
+    --input-bg: rgba(255, 255, 255, 0.65);
+    --input-focus-bg: #ffffff;
+    --drop-zone-bg: rgba(255, 255, 255, 0.35);
+    --drop-zone-hover-bg: rgba(255, 255, 255, 0.55);
+  }
+
+  .contrib-wrap {
+    min-height: 85vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7rem 1.5rem 3rem;
+  }
+
+  .contrib-card {
+    width: 100%;
+    max-width: 680px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 2.5rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 20px 50px rgba(214, 51, 132, 0.1);
+    position: relative;
+  }
+
+  .contrib-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-hi);
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+
+  .contrib-sub {
+    font-size: 0.88rem;
+    color: var(--text-mid);
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  /* Drag Drop Zone */
+  .drop-zone {
+    border: 2px dashed var(--border-active);
+    border-radius: 16px;
+    padding: 2.2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--drop-zone-bg);
+    margin-bottom: 1.5rem;
+  }
+
+  .drop-zone:hover,
+  .drop-zone.dragover {
+    border-color: var(--primary);
+    background: var(--drop-zone-hover-bg);
+    box-shadow: inset 0 0 20px var(--primary-glow);
+  }
+
+  .drop-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.8rem;
+    display: inline-block;
+  }
+
+  .drop-text {
+    font-size: 0.88rem;
+    color: var(--text-mid);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+  }
+
+  .drop-subtext {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 0.4rem;
+  }
+
+  /* Form layouts */
+  .contrib-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 580px) {
+    .contrib-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .field-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .contrib-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .contrib-input {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    color: var(--text-hi);
+    font-size: 0.88rem;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+
+  .contrib-input:focus {
+    border-color: var(--primary);
+    background: var(--input-focus-bg);
+    box-shadow: 0 0 10px var(--primary-glow);
+  }
+
+  select.contrib-input option {
+    background: var(--abyss);
+    color: var(--text-hi);
+  }
+
+  /* Loader */
+  .parse-loader {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.85rem;
+    background: rgba(214, 51, 132, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    font-size: 0.82rem;
+    color: var(--primary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+  }
+
+  .submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    border: none;
+    color: #fff;
+    padding: 0.9rem;
+    border-radius: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, filter 0.2s;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 14px rgba(214, 51, 132, 0.2);
+  }
+
+  .submit-btn:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 6px 18px rgba(214, 51, 132, 0.3);
+  }
+
+  .submit-btn:active {
+    transform: scale(0.99);
+  }
+
+  /* Success Message Panel */
+  .success-panel {
+    display: none;
+    text-align: center;
+    padding: 2rem 0;
+  }
+
+  .success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    display: inline-block;
+  }
+</style>
+
+<div class="contrib-wrap">
+  <div class="contrib-card">
+    <a href="/"
+      style="position:absolute; top:1.8rem; left:2rem; color:var(--text-dim); text-decoration:none; font-size:0.8rem; display:flex; align-items:center; gap:0.3rem;">
+      ← Go Back
+    </a>
+
+    <!-- Input Form Block -->
+    <div id="formBlock">
+      <h2 class="contrib-title">📄 Contribute Question Paper</h2>
+      <p class="contrib-sub">Help keep the Question vault updated. Upload and verify your paper details.</p>
+
+      <!-- Drag & Drop Zone -->
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <span class="drop-icon">📄</span>
+        <div class="drop-text" id="dropText">Drag & Drop Question Paper PDF here or click to browse</div>
+        <div class="drop-subtext">Supports only PDF format (Max 15MB)</div>
+        <input type="file" id="fileInput" style="display:none;" accept=".pdf" onchange="handleFileSelected(this.files)">
+      </div>
+
+      <!-- Parsing Loader -->
+      <div class="parse-loader" id="parseLoader">
+        <span class="spinner" style="border-left-color: var(--primary); width: 16px; height: 16px;"></span>
+        🔍 Smart parser is reading the PDF content...
+      </div>
+
+      <!-- Meta Inputs -->
+      <form id="contribForm" onsubmit="submitContribution(event)">
+        <!-- CSRF Token -->
+        <input type="hidden" id="csrfToken" value="{{ csrf_token() }}">
+
+        <div class="contrib-grid">
+          <div class="field-wrap">
+            <label class="contrib-label" for="dept">Department</label>
+            <select id="dept" name="department" class="contrib-input" required>
+              <option value="" disabled selected>Select Department</option>
+              {% for d in departments %}
+              <option value="{{ d.value }}">{{ d.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field-wrap">
+            <label class="contrib-label" for="class_name">Class / Programme</label>
+            <select id="class_name" name="class_name" class="contrib-input" required>
+              <option value="I-year">I-year</option>
+              <option value="II-year">II-year</option>
+              <option value="III-year">III-year</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="contrib-grid">
+          <div class="field-wrap">
+            <label class="contrib-label" for="semester">Semester</label>
+            <select id="semester" name="semester" class="contrib-input" required>
+              <option value="1st">1st Semester</option>
+              <option value="2nd">2nd Semester</option>
+              <option value="3rd">3rd Semester</option>
+              <option value="4th">4th Semester</option>
+              <option value="5th">5th Semester</option>
+              <option value="6th">6th Semester</option>
+            </select>
+          </div>
+
+          <div class="field-wrap">
+            <label class="contrib-label" for="exam_type">Exam Type</label>
+            <select id="exam_type" name="exam_type" class="contrib-input" required>
+              <option value="Semester Exam">Semester Exam</option>
+              <option value="Model Exam">Model Exam</option>
+              <option value="Internal Exam (CIA)">Internal Exam (CIA)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="contrib-grid">
+          <div class="field-wrap">
+            <label class="contrib-label" for="subject_code">Subject Code</label>
+            <input type="text" id="subject_code" name="subject_code" class="contrib-input" placeholder="e.g. U18CS501"
+              required>
+          </div>
+
+          <div class="field-wrap">
+            <label class="contrib-label" for="year">Exam Year</label>
+            <select id="year" name="year" class="contrib-input" required>
+              <option value="2030">2030</option>
+              <option value="2029">2029</option>
+              <option value="2028">2028</option>
+              <option value="2027">2027</option>
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+              <option value="2021">2021</option>
+              <option value="2020">2020</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-wrap" style="margin-bottom: 1.5rem;">
+          <label class="contrib-label" for="subject_name">Subject Name</label>
+          <input type="text" id="subject_name" name="subject_name" class="contrib-input"
+            placeholder="e.g. Java Programming" required>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+          🚀 Submit Contribution
+        </button>
+      </form>
+    </div>
+
+    <!-- Success Block -->
+    <div id="successBlock" class="success-panel">
+      <span class="success-icon">🌸</span>
+      <h2 class="contrib-title">Thank You!</h2>
+      <p class="contrib-sub" style="margin-bottom: 2rem;">Your contribution was submitted successfully. The Admin team
+        will review and approve it shortly.</p>
+      <a href="/" class="submit-btn"
+        style="text-decoration:none; display:inline-flex; width:auto; padding:0.85rem 2rem;">
+        ← Back to Vault
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let selectedFile = null;
+
+  const dropZone = document.getElementById('dropZone');
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    }, false);
+  });
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+    }, false);
+  });
+
+  dropZone.addEventListener('drop', e => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    handleFileSelected(files);
+  });
+
+  function handleFileSelected(files) {
+    if (files.length === 0) return;
+    const file = files[0];
+
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      alert('Only PDF files are allowed!');
+      return;
+    }
+
+    selectedFile = file;
+    document.getElementById('dropText').innerHTML = `Selected File: <strong style="color:var(--primary);">${file.name}</strong>`;
+
+    parsePDF(file);
+  }
+
+  async function parsePDF(file) {
+    const loader = document.getElementById('parseLoader');
+    const csrfToken = document.getElementById('csrfToken').value;
+
+    loader.style.display = 'flex';
+
+    const formData = new FormData();
+    formData.append('pdf_file', file);
+    formData.append('csrf_token', csrfToken);
+
+    try {
+      const res = await fetch('/api/parse-pdf-public', {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) throw new Error("Parser response error");
+      const data = await res.json();
+
+      if (data.success && data.metadata) {
+        const meta = data.metadata;
+        if (meta.subject_code) document.getElementById('subject_code').value = meta.subject_code;
+        if (meta.subject_name) document.getElementById('subject_name').value = meta.subject_name;
+        if (meta.department) document.getElementById('dept').value = meta.department;
+        if (meta.class_name) document.getElementById('class_name').value = meta.class_name;
+        if (meta.semester) document.getElementById('semester').value = meta.semester;
+        if (meta.exam_type) document.getElementById('exam_type').value = meta.exam_type;
+        if (meta.year) document.getElementById('year').value = meta.year;
+      }
+    } catch (e) {
+      console.error("PDF Parsing failed: ", e);
+    } finally {
+      loader.style.display = 'none';
+    }
+  }
+
+  async function submitContribution(event) {
+    event.preventDefault();
+    if (!selectedFile) {
+      alert('Please upload a PDF file first!');
+      return;
+    }
+
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '<span class="spinner" style="border-left-color:#fff; width:14px; height:14px;"></span> Submitting...';
+    btn.disabled = true;
+
+    const formData = new FormData(document.getElementById('contribForm'));
+    formData.append('pdf_file', selectedFile);
+
+    try {
+      const res = await fetch('/contribute', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        const contributions = JSON.parse(localStorage.getItem('my_contributions') || '[]');
+        contributions.push({
+          id: data.paper_id,
+          subject_code: data.subject_code,
+          subject_name: data.subject_name,
+          status: 'pending'
+        });
+        localStorage.setItem('my_contributions', JSON.stringify(contributions));
+
+        document.getElementById('formBlock').style.display = 'none';
+        document.getElementById('successBlock').style.display = 'block';
+      } else {
+        alert('Upload failed: ' + data.error);
+        btn.innerHTML = '🚀 Submit Contribution';
+        btn.disabled = false;
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network error occurred. Please try again.');
+      btn.innerHTML = '🚀 Submit Contribution';
+      btn.disabled = false;
+    }
+  }
+</script>
+{% endblock %}

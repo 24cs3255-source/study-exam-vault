@@ -1,0 +1,28 @@
+# Python environment
+.venv/
+venv/
+ENV/
+env/
+dist/
+build/
+*.egg-info/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local environment variables
+.env
+.env.local
+.env.*.local
+
+# Database files
+instance/
+*.db
+*.sqlite
+
+# User uploaded files (local uploads should not be committed)
+static/uploads/*
+!static/uploads/.gitkeep

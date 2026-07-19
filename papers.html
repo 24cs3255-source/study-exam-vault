@@ -1,0 +1,785 @@
+{% extends "base.html" %}
+{% block title %}All Papers — EXAM-STUDY-VAULT{% endblock %}
+
+{% block content %}<style>
+  /* ══════════════════════════════════════════════
+     SOFT PINK FLORAL THEME TOKENS
+  ══════════════════════════════════════════════ */
+  /* Theme variables mapped to page wrapper */
+  .page-wrap {
+    --primary-light: var(--primary-glow);
+    --text-dim: var(--text-lo);
+    --surface: var(--card);
+    --surface-hover: var(--edge-active);
+    --border: var(--edge);
+    --border-active: var(--edge-active);
+    --input-bg: rgba(0, 0, 0, 0.25);
+    --input-focus-bg: rgba(0, 0, 0, 0.4);
+    --cell-bg: rgba(0, 0, 0, 0.15);
+    --cell-hover-bg: rgba(0, 0, 0, 0.25);
+    --toast-bg: rgba(13, 19, 32, 0.96);
+  }
+
+  [data-theme="royal"] .page-wrap {
+    --input-bg: rgba(255, 255, 255, 0.65);
+    --input-focus-bg: #ffffff;
+    --cell-bg: rgba(255, 255, 255, 0.35);
+    --cell-hover-bg: rgba(255, 255, 255, 0.55);
+    --toast-bg: rgba(255, 255, 255, 0.95);
+  }
+
+  /* Page wrapper */
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    padding: 6rem 1.5rem 6rem;
+    max-width: 1240px;
+    margin: 0 auto;
+  }
+
+  /* Page hero */
+  .page-hero {
+    margin-bottom: 3.5rem;
+    animation: fadeSlideUp 0.5s ease both;
+  }
+
+  .page-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .eyebrow-line {
+    width: 28px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary));
+  }
+
+  .eyebrow-line.right {
+    background: linear-gradient(90deg, var(--primary), transparent);
+  }
+
+  .eyebrow-text {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--primary);
+  }
+
+  .page-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(2.4rem, 6vw, 4.4rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    animation: fadeSlideUp 0.55s 0.05s ease both;
+  }
+
+  .page-title .line-1 {
+    display: block;
+    color: var(--text-hi);
+  }
+
+  .page-title .line-2 {
+    display: block;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 24px rgba(214, 51, 132, 0.25));
+  }
+
+  .page-sub {
+    margin-top: 1rem;
+    font-size: 1.02rem;
+    color: var(--text-mid);
+    line-height: 1.6;
+    max-width: 520px;
+    animation: fadeSlideUp 0.55s 0.1s ease both;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 1px;
+    margin-bottom: 3.5rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px;
+    animation: fadeSlideUp 0.55s 0.15s ease both;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(214, 51, 132, 0.1);
+  }
+
+  .stat-cell {
+    flex: 1;
+    background: var(--cell-bg);
+    padding: 1.6rem 1.2rem;
+    text-align: center;
+    position: relative;
+    transition: background-color 0.2s;
+  }
+
+  .stat-cell:hover {
+    background: var(--cell-hover-bg);
+  }
+
+  .stat-cell+.stat-cell::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 25%;
+    bottom: 25%;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .stat-num {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stat-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 0.35rem;
+  }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    animation: fadeSlideUp 0.55s 0.2s ease both;
+  }
+
+  .section-header-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  .section-header-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--primary);
+  }
+
+  .section-count {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .section-count span {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* Papers grid */
+  .papers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* Paper card */
+  .paper-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 1.5rem;
+    will-change: transform, opacity;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+    opacity: 0;
+    animation: cardReveal 0.4s ease forwards;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 20px rgba(214, 51, 132, 0.05);
+  }
+
+  .paper-card:hover {
+    transform: translateY(-4px);
+    background: var(--surface-hover);
+    border-color: var(--border-active);
+    box-shadow: 0 12px 30px rgba(214, 51, 132, 0.15);
+  }
+
+  @keyframes cardReveal {
+    from {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Card header row */
+  .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .card-badges {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .card-date {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  /* Card body */
+  .card-subject {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-hi);
+    line-height: 1.35;
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.01em;
+  }
+
+  .card-code {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .card-meta {
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    margin-bottom: 1.2rem;
+    flex: 1;
+  }
+
+  /* Card actions */
+  .card-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: auto;
+  }
+
+  .btn-outline-blue,
+  .btn-solid-blue {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.55rem 0.55rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all 0.2s;
+  }
+
+  .btn-outline-blue {
+    color: var(--primary);
+    background: transparent;
+    border: 1px solid var(--border-active);
+  }
+
+  .btn-outline-blue:hover {
+    background: rgba(214, 51, 132, 0.05);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  .btn-solid-blue {
+    color: #fff;
+    border: none;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    box-shadow: 0 4px 14px rgba(214, 51, 132, 0.2);
+  }
+
+  .btn-solid-blue:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 6px 18px rgba(214, 51, 132, 0.3);
+  }
+
+  /* Empty state */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 5rem 2rem;
+    color: var(--text-dim);
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1.2rem;
+    opacity: 0.7;
+  }
+
+  .empty-state p {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: var(--text-mid);
+  }
+
+  /* Live Search bar */
+  .search-wrap {
+    margin-bottom: 2.2rem;
+    position: relative;
+    animation: fadeSlideUp 0.55s 0.18s ease both;
+  }
+
+  .search-wrap::before {
+    content: '⚡';
+    position: absolute;
+    left: 1.1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    pointer-events: none;
+    opacity: 0.9;
+    color: var(--primary);
+  }
+
+  .live-search-input {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text-hi);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.92rem;
+    padding: 0.75rem 1rem 0.75rem 2.8rem;
+    outline: none;
+    border-radius: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+    box-sizing: border-box;
+  }
+
+  .live-search-input::placeholder {
+    color: var(--text-dim);
+  }
+
+  .live-search-input:focus {
+    border-color: var(--primary);
+    background-color: var(--input-focus-bg);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+  }
+
+  .search-count {
+    margin-top: 0.65rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    min-height: 1em;
+  }
+
+  .search-count span {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* No-results message inside the grid */
+  .no-results-msg {
+    display: none;
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    line-height: 1.8;
+  }
+
+  .no-results-msg .no-results-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.8rem;
+    opacity: 0.7;
+  }
+
+  /* Download toast */
+  #downloadToast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.85rem 1.3rem;
+    background: var(--toast-bg);
+    border: 1px solid var(--border);
+    border-top: 2px solid #30b0c7;
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    min-width: 300px;
+    max-width: 90vw;
+    pointer-events: none;
+    opacity: 0;
+    box-shadow: 0 10px 30px var(--primary-glow);
+  }
+
+  #downloadToast.toast-show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .dl-toast-icon {
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    color: #30b0c7;
+  }
+
+  .toast-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex: 1;
+  }
+
+  .toast-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-hi);
+  }
+
+  .toast-msg {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    color: var(--text-mid);
+    line-height: 1.4;
+  }
+
+  .toast-close {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.1rem 0.3rem;
+    flex-shrink: 0;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+
+  .toast-close:hover {
+    color: #30b0c7;
+  }
+
+  .toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #30b0c7, #00ffb3);
+    width: 100%;
+    transform-origin: left;
+  }
+
+  @media (min-width: 768px) {
+    #downloadToast {
+      transform: translateX(-50%) translateY(-140%);
+      transition: transform 0.28s ease-out, opacity 0.28s ease-out;
+    }
+
+    #downloadToast.toast-show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #downloadToast.toast-show .toast-progress {
+      animation: toast-drain 3s linear forwards;
+    }
+
+    @keyframes toast-drain {
+      from {
+        transform: scaleX(1);
+      }
+
+      to {
+        transform: scaleX(0);
+      }
+    }
+
+    .toast-progress {
+      will-change: transform;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .papers-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .stats-bar {
+      flex-direction: column;
+      gap: 0;
+      border-radius: 16px;
+    }
+
+    .stat-cell+.stat-cell::before {
+      display: none;
+    }
+
+    .stat-cell {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-cell:last-child {
+      border-bottom: none;
+    }
+
+    .stat-num {
+      font-size: 2rem;
+    }
+
+    .card-actions {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    #downloadToast {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      background: #ffffff !important;
+    }
+
+    .paper-card {
+      animation: none !important;
+      transform: none !important;
+      box-shadow: none !important;
+      opacity: 1;
+    }
+  }
+</style>
+
+<div class="page-wrap">
+
+  <!-- ── Page hero ── -->
+  <div class="page-hero">
+    <div class="page-eyebrow">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">EXAM-STUDY VAULT</span>
+      <div class="eyebrow-line right"></div>
+    </div>
+    <h1 class="page-title">
+      <span class="line-1">All Question</span>
+      <span class="line-2">Papers</span>
+    </h1>
+    <p class="page-sub">
+      Every uploaded paper in one place — browse, preview, and download freely.
+    </p>
+  </div>
+
+  <!-- ── Stats bar ── -->
+  <div class="stats-bar">
+    <div class="stat-cell">
+      <div class="stat-num">{{ total_papers }}</div>
+      <div class="stat-label">Total Papers</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">{{ total_depts }}</div>
+      <div class="stat-label">Departments</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num" style="font-size: 1.4rem;">{{ year_range }}</div>
+      <div class="stat-label">Year Range</div>
+    </div>
+  </div>
+
+  <!-- ── Papers section ── -->
+  <div class="section-header">
+    <div class="section-header-line"></div>
+    <span class="section-header-title">All Papers</span>
+    <div class="section-header-line" style="background: linear-gradient(90deg, transparent, rgba(214, 51, 132, 0.3));">
+    </div>
+    <span class="section-count"><span>{{ total_papers }}</span> papers</span>
+  </div>
+
+  <!-- ── Live Search ── -->
+  <div class="search-wrap">
+    <input id="liveSearch" type="text" class="live-search-input" placeholder="Search by subject, class, year…"
+      oninput="filterPapers()" autocomplete="off" spellcheck="false" />
+    <div id="searchCount" class="search-count"></div>
+  </div>
+
+  <div class="papers-grid" id="papersGrid">
+    <!-- no-results placeholder (hidden by default) -->
+    <div class="no-results-msg" id="noResultsMsg">
+      <div class="no-results-icon">🌸</div>
+      <p>No papers match your search.<br>Try a different subject name, class, or year.</p>
+    </div>
+
+    {% if papers %}
+    {% for p in papers %}
+    {% set badge_class = 'badge-model' if 'model' in p.exam_type.lower() else 'badge-semester' %}
+    <div class="paper-card paper-item" style="animation-delay: {{ loop.index0 * 0.04 }}s;" data-search="{{ p.subject_name|lower }} {{ p.subject_code|lower }} {{ p.department|lower }} {{ p.semester|lower }} {{ p.year }} {{ (p.class_name or '')|lower }} {{ p.exam_type|lower }}">
+
+      <div class="card-header-row">
+        <div class="card-badges">
+          <span class="badge {{ badge_class }}">{{ p.exam_type }}</span>
+          <span class="badge badge-year">{{ p.year }}</span>
+        </div>
+        <span class="card-date">{{ p.uploaded_at.strftime('%d %b %Y') if p.uploaded_at else '' }}</span>
+      </div>
+
+      <div class="card-subject">{{ p.subject_name }}</div>
+      <div class="card-code">{{ p.subject_code }}</div>
+      <div class="card-meta">{{ p.department }} &middot; Semester {{ p.semester }}{% if p.class_name %} &middot; {{ p.class_name }}{% endif %}</div>
+
+      <div class="card-actions" style="display:flex; flex-direction:column; gap:0.5rem; width:100%;">
+        <div style="display:flex; gap:0.5rem; width:100%;">
+          <a href="javascript:void(0);" onclick="openSmartPreview('{{ p.id }}')" class="btn-outline-blue"
+            style="flex:1;">
+            👁 Preview
+          </a>
+          <a href="/download/{{ p.id }}" target="_blank" rel="noopener noreferrer" class="btn-solid-blue"
+            onclick="showDownloadToast()" style="flex:1;">
+            ⬇ Download
+          </a>
+        </div>
+        <div style="display:flex; gap:0.5rem; width:100%;">
+          <button
+            onclick="openResourcesModal('{{ p.id }}', `{{ p.subject_name|escape }}`, '{{ p.subject_code|escape }}')"
+            class="btn-outline-blue"
+            style="flex:1; border-color:var(--border); color:var(--primary); background:transparent;">
+            📚 Resources
+          </button>
+          <a href="/student/mock/{{ p.id }}" class="btn-outline-blue"
+            style="flex:1; text-align:center; display:flex; justify-content:center; align-items:center; background:rgba(214, 51, 132, 0.05); border-color:var(--border); color:var(--primary);">
+            📝 Mock Exam
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🌸</div>
+      <p>No papers have been uploaded yet.<br>Check back soon or head to the admin panel to add some.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+  /**
+   * Smart PDF Preview
+   * - Mobile  → Google Docs Viewer (avoids native PDF rendering issues on phones)
+   * - Desktop → Direct /view/ route (fast, native browser PDF viewer)
+   */
+  function openSmartPreview(paperId) {
+    var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
+      .test(navigator.userAgent);
+    var isLocalhost = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1' || 
+                        window.location.hostname.startsWith('192.168.') || 
+                        window.location.hostname.startsWith('10.') ||
+                        window.location.hostname.endsWith('.local');
+
+    var url;
+    if (isMobile && !isLocalhost) {
+      var directUrl = window.location.origin + '/view/' + paperId + '?t=' + Date.now();
+      url = 'https://docs.google.com/viewer?url='
+        + encodeURIComponent(directUrl)
+        + '&embedded=true';
+    } else {
+      url = '/view/' + paperId;
+    }
+
+    window.open(url, '_blank');
+  }
+
+  // ── Download toast helpers ──────────────────────────────────────────────────
+  // IMPORTANT: showDownloadToast() must NEVER call event.preventDefault() or
+  // return false.  It is attached as an inline onclick on an <a href="…"> tag;
+  // returning nothing (undefined) lets the browser proceed with the download
+  // immediately.  The function only fires the visual notification as a side-effect.
+  var _dlToastTimer = null;
+  var _dlToastVisible = false; // duplicate-prevention flag
+
+  function showDownloadToast() {
+    // Already visible → just reset the 3-second auto-dismiss timer.
+    // Do NOT re-add the class (avoids animation jank on rapid taps).
+    // Do NOT call event.preventDefault() — download must not be blocked.
+    if (_dlToastVisible) {
+      clearTimeout(_dlToastTimer);
+      _dlToastTimer = setTimeout(dismissDownloadToast, 3000);
+      return; // returns undefined → browser default (download) proceeds
+    }
+    _dlToastVisible = true;
+    document.getElementById('downloadToast').classList.add('toast-show');
+    clearTimeout(_dlToastTimer);
+    _dlToastTimer = setTimeout(dismissDownloadToast, 3000);
+    // Function ends here — returns undefined → browser default (download) proceeds
+  }
+
+  function dismissDownloadToast() {
+    clearTimeout(_dlToastTimer);
+    _dlToastVisible = false;
+    document.getElementById('downloadToast').classList.remove('toast-show');
+  }
+
+  // ── Live Search ───────────────────────────────────────────────────────────
+  // Filters .paper-item cards instantly by matching the search term against
+  // each card's data-search attribute (subject, code, dept, semester, year,
+  // class, exam type — all pre-lowercased server-side for zero runtime cost).
+  function filterPapers() {
+    var query = document.getElementById('liveSearch').value.trim().toLowerCase();
+    var items = document.querySelectorAll('.paper-item');
+    var noMsg = document.getElementById('noResultsMsg');
+    var countEl = document.getElementById('searchCount');
+    var visible = 0;
+
+    items.forEach(function (card) {
+      var match = !query || card.dataset.search.indexOf(query) !== -1;
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+
+    // Update counter below the input
+    if (query) {
+      countEl.innerHTML = '<span>' + visible + '</span> of ' + items.length + ' paper' + (items.length !== 1 ? 's' : '') + ' match';
+    } else {
+      countEl.innerHTML = '';
+    }
+
+    // Show/hide no-results placeholder
+    noMsg.style.display = (query && visible === 0) ? 'block' : 'none';
+  }
+</script>
+{% endblock %}

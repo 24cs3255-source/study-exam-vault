@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Upload Paper{% endblock %}
+
+{% block content %}
+<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:7rem 1.5rem 10rem;">
+  <div class="glass-card" style="width:100%; max-width:580px; padding:2.5rem 2rem; border-radius:24px;">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:2rem;">
+      <a href="/admin" class="btn-outline-blue" style="padding:.4rem .85rem;font-size:.8rem;border-radius:8px;">← Back</a>
+      <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,var(--apple-blue),var(--apple-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em;">
+        Upload Question Paper
+      </h1>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+      <!-- PDF drop zone -->
+      <div id="dropZone" onclick="document.getElementById('pdf_file').click()"
+           style="border:2px dashed rgba(0,122,255,.3); border-radius:14px; padding:2.5rem 1rem;
+                  text-align:center; cursor:pointer; margin-bottom:1.6rem; transition:border-color .3s,background .3s;"
+           ondragover="event.preventDefault();this.style.borderColor='var(--apple-blue)';this.style.background='rgba(0,122,255,.05)'"
+           ondragleave="this.style.borderColor='rgba(0,122,255,.3)';this.style.background=''"
+           ondrop="handleDrop(event)">
+        <div style="font-size:2.5rem;margin-bottom:.6rem;">📄</div>
+        <p style="color:var(--text-bright);font-size:.9rem;font-family:'Plus Jakarta Sans',sans-serif;font-weight:500;" id="dropLabel">Click or drag &amp; drop PDF here</p>
+        <p style="color:var(--text-dim);font-size:.75rem;margin-top:.3rem;">Max 50 MB</p>
+        <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" style="display:none;" onchange="onFileSelected(this)" required/>
+      </div>
+
+      <!-- Metadata grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+
+        <div style="grid-column:1/-1;">
+          <label class="field-label">Department / Course</label>
+          {% if admin and admin.role == 'staff' and admin.department %}
+            <input type="text" name="department" class="glass-input" value="{{ admin.department }}" readonly style="opacity:0.75; cursor:not-allowed;" required/>
+          {% else %}
+            <input type="text" name="department" class="glass-input" placeholder="e.g. B.Sc Computer Science" required list="dept-list"/>
+          {% endif %}
+          <datalist id="dept-list">
+            {% for d in [
+              'B.Sc Computer Science',
+              'BCA',
+              'B.Sc Information Technology',
+              'B.Sc Mathematics',
+              'B.Sc Physics',
+              'B.Sc Chemistry',
+              'B.Com General',
+              'B.Com Computer Applications',
+              'B.Com Professional Accounting',
+              'BBA',
+              'B.A English Literature',
+              'B.A Tamil Literature',
+              'B.A Economics',
+              'M.Sc Computer Science',
+              'MCA',
+              'M.Com',
+              'M.A English'
+            ] %}
+            <option value="{{ d }}">
+            {% endfor %}
+          </datalist>
+        </div>
+
+        <!-- Class field -->
+        <div style="grid-column:1/-1;">
+          <label class="field-label">Class / Year of Study</label>
+          <select name="class_name" class="glass-input" required>
+            <option value="" disabled selected>Select year</option>
+            {% for c in class_choices %}
+            <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="field-label">Semester</label>
+          <select name="semester" class="glass-input" required>
+            <option value="" disabled selected>Select</option>
+            {% for s in ['1st','2nd','3rd','4th','5th','6th'] %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="field-label">Exam Type</label>
+          <select name="exam_type" class="glass-input" required>
+            <option value="" disabled selected>Select</option>
+            <option value="Semester Exam">Semester Exam</option>
+            <option value="Model Exam">Model Exam</option>
+            <option value="Internal Exam (CIA)">Internal Exam (CIA)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="field-label">Subject Code</label>
+          <input type="text" name="subject_code" class="glass-input" placeholder="e.g. U18CS501" required/>
+        </div>
+
+        <div>
+          <label class="field-label">Year of Exam</label>
+          <select name="year" class="glass-input" required>
+            <option value="" disabled selected>Select year</option>
+            {% for y in range(2031, 2019, -1) %}
+            <option value="{{ y }}">{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="grid-column:1/-1;">
+          <label class="field-label">Subject Name</label>
+          <input type="text" name="subject_name" class="glass-input" placeholder="e.g. Java Programming" required/>
+        </div>
+
+      </div>
+
+      <button type="submit" class="btn-solid-blue" style="width:100%;justify-content:center;padding:.75rem;font-size:.95rem;margin-top:.5rem;border-radius:12px;">
+        ⬆ Upload Paper
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+.field-label {
+  display:block; font-size:.72rem; font-weight:600;
+  color:var(--apple-blue); letter-spacing:.08em;
+  text-transform:uppercase; margin-bottom:.35rem;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function onFileSelected(input) {
+  if (input.files[0]) {
+    document.getElementById('dropLabel').textContent = '✅ ' + input.files[0].name;
+    document.getElementById('dropZone').style.borderColor = 'var(--apple-blue)';
+  }
+}
+function handleDrop(e) {
+  e.preventDefault();
+  const dt = e.dataTransfer;
+  if (dt.files[0]) {
+    document.getElementById('pdf_file').files = dt.files;
+    onFileSelected(document.getElementById('pdf_file'));
+  }
+  document.getElementById('dropZone').style.background = '';
+}
+</script>
+{% endblock %}

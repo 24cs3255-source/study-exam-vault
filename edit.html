@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Edit Paper{% endblock %}
+
+{% block content %}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:7rem 1.5rem 10rem;">
+  <div class="glass-card" style="width:100%;max-width:560px;padding:2.5rem 2rem;border-radius:24px;">
+
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:2rem;">
+      <a href="{{ '/moderator' if session.get('admin_role') == 'staff' else '/admin' }}" class="btn-outline-blue" style="padding:.4rem .85rem;font-size:.8rem;border-radius:8px;">← Back</a>
+      <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--apple-blue),var(--apple-purple));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em;">
+        Edit Paper Metadata
+      </h1>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+
+        <div style="grid-column:1/-1;">
+          <label class="field-label">Department / Course</label>
+          <input type="text" name="department" class="glass-input" value="{{ paper.department }}" required list="dept-list"/>
+          <datalist id="dept-list">
+            <option value="All Departments">
+            {% for d in [
+              'B.Sc Computer Science',
+              'BCA',
+              'B.Sc Information Technology',
+              'B.Sc Mathematics',
+              'B.Sc Physics',
+              'B.Sc Chemistry',
+              'B.Com General',
+              'B.Com Computer Applications',
+              'B.Com Professional Accounting',
+              'BBA',
+              'B.A English Literature',
+              'B.A Tamil Literature',
+              'B.A Economics',
+              'M.Sc Computer Science',
+              'MCA',
+              'M.Com',
+              'M.A English'
+            ] %}
+            <option value="{{ d }}">
+            {% endfor %}
+          </datalist>
+        </div>
+
+        <!-- Class field -->
+        <div style="grid-column:1/-1;">
+          <label class="field-label">Class / Year of Study</label>
+          <select name="class_name" class="glass-input" required>
+            <option value="">Select year</option>
+            {% for c in class_choices %}
+            <option value="{{ c }}" {{ 'selected' if paper.class_name == c }}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="field-label">Semester</label>
+          <select name="semester" class="glass-input" required>
+            {% for s in ['1st','2nd','3rd','4th','5th','6th'] %}
+            <option value="{{ s }}" {{ 'selected' if paper.semester == s }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="field-label">Exam Type</label>
+          <select name="exam_type" class="glass-input" required>
+            <option value="Semester Exam" {{ 'selected' if paper.exam_type == 'Semester Exam' }}>Semester Exam</option>
+            <option value="Model Exam" {{ 'selected' if paper.exam_type == 'Model Exam' }}>Model Exam</option>
+            <option value="Internal Exam (CIA)" {{ 'selected' if paper.exam_type == 'Internal Exam (CIA)' }}>Internal Exam (CIA)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="field-label">Subject Code</label>
+          <input type="text" name="subject_code" class="glass-input" value="{{ paper.subject_code }}" required/>
+        </div>
+
+        <div>
+          <label class="field-label">Year of Exam</label>
+          <select name="year" class="glass-input" required>
+            {% for y in range(2031, 2019, -1) %}
+            <option value="{{ y }}" {{ 'selected' if paper.year == y }}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="grid-column:1/-1;">
+          <label class="field-label">Subject Name</label>
+          <input type="text" name="subject_name" class="glass-input" value="{{ paper.subject_name }}" required/>
+        </div>
+
+      </div>
+
+      <!-- PDF Replacement Section -->
+      <div style="grid-column:1/-1;margin-top:1.25rem;">
+        <label class="field-label">Current PDF File</label>
+        <div style="display:flex;align-items:center;gap:.65rem;padding:.6rem .9rem;border-radius:.5rem;background:rgba(0,122,255,.05);border:1px solid rgba(0,122,255,.15);">
+          <span style="font-size:1rem;">📄</span>
+          <span style="font-size:.82rem;color:var(--text-bright);word-break:break-all;font-family:'Inter',sans-serif;font-weight:500;">{{ paper.original_name }}</span>
+        </div>
+      </div>
+
+      <div style="grid-column:1/-1;margin-top:.75rem;">
+        <label class="field-label">Replace PDF <span style="color:var(--text-dim);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+        <label class="pdf-drop-zone" id="dropZone">
+          <input type="file" name="new_file" accept=".pdf" id="newFileInput" style="display:none;" onchange="handleFileChange(this)"/>
+          <span id="dropZoneText">
+            <span style="font-size:1.4rem;display:block;margin-bottom:.35rem;">📂</span>
+            <span style="font-size:.82rem;color:var(--text-mid);font-family:'Inter',sans-serif;font-weight:500;">Click to browse or drag &amp; drop a PDF to replace</span>
+          </span>
+        </label>
+        <p id="selectedFileName" style="display:none;font-size:.78rem;color:#30d158;margin-top:.4rem;padding-left:.2rem;font-family:'Inter',sans-serif;font-weight:600;">
+          ✅ <span id="fileNameDisplay"></span>
+        </p>
+      </div>
+
+      <button type="submit" class="btn-solid-blue" style="width:100%;justify-content:center;padding:.75rem;font-size:.95rem;margin-top:1.5rem;border-radius:12px;">
+        💾 Save Changes
+      </button>
+    </form>
+  </div>
+</div>
+
+<style>
+.field-label {
+  display:block;font-size:.72rem;font-weight:600;
+  color:var(--apple-blue);letter-spacing:.08em;
+  text-transform:uppercase;margin-bottom:.35rem;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.pdf-drop-zone {
+  display:flex;align-items:center;justify-content:center;
+  width:100%;padding:1.1rem 1rem;box-sizing:border-box;
+  border:1.5px dashed rgba(0, 122, 255, .3);border-radius:.5rem;
+  background:rgba(255, 255, 255, .01);cursor:pointer;
+  transition:border-color .2s,background .2s;text-align:center;
+}
+.pdf-drop-zone:hover,
+.pdf-drop-zone.drag-over {
+  border-color:var(--apple-blue);
+  background:rgba(0, 122, 255, .05);
+}
+</style>
+
+<script>
+function handleFileChange(input) {
+  const label = document.getElementById('selectedFileName');
+  const nameSpan = document.getElementById('fileNameDisplay');
+  const dropText = document.getElementById('dropZoneText');
+  if (input.files && input.files[0]) {
+    nameSpan.textContent = input.files[0].name;
+    label.style.display = 'block';
+    dropText.querySelector('span:last-child').textContent = input.files[0].name;
+  } else {
+    label.style.display = 'none';
+  }
+}
+
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const input = document.getElementById('newFileInput');
+  const dt = e.dataTransfer;
+  if (dt.files.length) {
+    input.files = dt.files;
+    handleFileChange(input);
+  }
+});
+</script>
+{% endblock %}

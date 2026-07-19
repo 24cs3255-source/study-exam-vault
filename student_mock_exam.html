@@ -1,0 +1,565 @@
+{% extends "base.html" %}
+{% block title %}Mock Exam Simulator — {{ paper.subject_name }}{% endblock %}
+
+{% block content %}
+<style>
+  .mock-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 66px);
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Top Bar */
+  .mock-topbar {
+    background: rgba(13, 19, 32, 0.7);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 2rem;
+    gap: 1.5rem;
+  }
+
+  .mock-title-section {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mock-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 750;
+    font-size: 1.05rem;
+    color: var(--text-hi);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 450px;
+  }
+
+  .mock-subtitle {
+    font-size: 0.72rem;
+    color: var(--text-mid);
+    margin-top: 0.1rem;
+  }
+
+  /* Timer Controls */
+  .mock-timer-wrap {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0.45rem 1.1rem;
+    border-radius: 12px;
+  }
+
+  .mock-timer-display {
+    font-family: monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #ff453a;
+    letter-spacing: 0.04em;
+    min-width: 85px;
+  }
+
+  .mock-timer-btn {
+    background: none;
+    border: none;
+    color: var(--text-mid);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    padding: 0.2rem;
+    transition: color 0.2s, transform 0.1s;
+  }
+  .mock-timer-btn:hover { color: var(--text-hi); }
+  .mock-timer-btn:active { transform: scale(0.92); }
+
+  /* Save status */
+  .mock-save-status {
+    font-size: 0.72rem;
+    color: var(--text-lo);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  /* Main Workspace split panel */
+  .mock-workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .mock-panel-left {
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    background: #030712;
+    position: relative;
+  }
+
+  .mock-panel-right {
+    display: flex;
+    flex-direction: column;
+    background: rgba(8, 12, 20, 0.2);
+    padding: 1.5rem;
+    overflow: hidden;
+  }
+
+  .editor-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(13, 19, 32, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  }
+
+  .editor-header {
+    background: rgba(255, 255, 255, 0.01);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 0.65rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .editor-header-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-mid);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .mock-textarea {
+    flex: 1;
+    width: 100%;
+    background: transparent;
+    border: none;
+    resize: none;
+    outline: none;
+    color: var(--text-hi);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    padding: 1.5rem 1.5rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 860px) {
+    .mock-workspace { grid-template-columns: 1fr; grid-template-rows: 1.2fr 1fr; }
+    .mock-panel-left { border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+    .mock-topbar { padding: 0.6rem 1.2rem; }
+    .mock-title { max-width: 250px; font-size: 0.95rem; }
+  }
+
+  @media (max-width: 768px) {
+    .mock-topbar {
+      flex-wrap: wrap;
+      gap: 0.75rem 0.5rem;
+      padding: 0.6rem 0.75rem;
+    }
+    .mock-title-section {
+      width: 100%;
+    }
+    .mock-title {
+      max-width: 100%;
+      font-size: 0.92rem;
+      white-space: normal;
+    }
+    .mock-subtitle {
+      font-size: 0.68rem;
+    }
+    .mock-timer-wrap {
+      padding: 0.35rem 0.75rem;
+      gap: 0.5rem;
+    }
+    .mock-timer-display {
+      font-size: 1.1rem;
+      min-width: 70px;
+    }
+    .mock-actions {
+      gap: 0.5rem !important;
+      margin-left: auto;
+    }
+    .mock-save-status #save-status-text {
+      display: none;
+    }
+    .mock-topbar button.btn-outline, 
+    .mock-topbar button.btn-primary {
+      padding: 0.4rem 0.6rem !important;
+      font-size: 0.72rem !important;
+    }
+    .mock-topbar .btn-text {
+      display: none;
+    }
+    .mock-topbar .btn-icon-only {
+      display: inline !important;
+    }
+  }
+
+  /* Overlay states */
+  .mock-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 11, 17, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+
+  .mock-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .overlay-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-hi);
+    margin-bottom: 0.5rem;
+  }
+
+  .overlay-desc {
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    margin-bottom: 1.8rem;
+    max-width: 320px;
+    line-height: 1.5;
+  }
+</style>
+
+<div class="mock-container">
+
+  <!-- ── Top Header Bar ────────────────────────────────────────────────────── -->
+  <header class="mock-topbar">
+    <div class="mock-title-section">
+      <div class="mock-title">{{ paper.subject_name }}</div>
+      <div class="mock-subtitle">{{ paper.subject_code }} &middot; {{ paper.exam_type }} &middot; {{ paper.year }}</div>
+    </div>
+
+    <!-- Timer Controls -->
+    <div class="mock-timer-wrap">
+      <button class="mock-timer-btn" id="timer-toggle-btn" onclick="toggleTimer()" title="Pause/Resume Exam">
+        ⏸
+      </button>
+      <div class="mock-timer-display" id="timer-display">03:00:00</div>
+    </div>
+
+    <!-- Right layout actions -->
+    <div class="mock-actions" style="display:flex; align-items:center; gap:1.2rem;">
+      <div class="mock-save-status" style="display:flex; align-items:center; gap:0.35rem;">
+        <span class="save-indicator-dot" style="width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;flex-shrink:0;"></span>
+        <span id="save-status-text">Draft Saved</span>
+      </div>
+      <button onclick="deleteAndExit()" class="btn-outline" style="padding:0.45rem 1.15rem; font-size:0.78rem; border-color:rgba(239,68,68,0.3); color:#ff453a; background:rgba(239,68,68,0.05); box-shadow:none; cursor:pointer;">
+        <span class="btn-text">🗑️ Delete & Exit</span>
+        <span class="btn-icon-only" style="display:none;">🗑️</span>
+      </button>
+      <button onclick="confirmSubmission()" class="btn-primary" style="padding:0.45rem 1.15rem; font-size:0.78rem; box-shadow:none;">
+        <span class="btn-text">🏁 Submit Exam</span>
+        <span class="btn-icon-only" style="display:none;">🏁</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Workspace grid ────────────────────────────────────────────────────── -->
+  <div class="mock-workspace">
+    
+    <!-- Left Panel: PDF preview -->
+    <div class="mock-panel-left">
+      <iframe id="mock-pdf-iframe" class="w-full h-full border-0" style="display:block;" src=""></iframe>
+    </div>
+
+    <!-- Right Panel: Notepad draft editor -->
+    <div class="mock-panel-right">
+      <div class="editor-wrapper">
+        <div class="editor-header">
+          <div class="editor-header-label">
+            <span>📝</span> Answer Notepad
+          </div>
+          <span style="font-size: 0.68rem; color: var(--text-lo);">Auto-saves in background</span>
+        </div>
+        <textarea id="notepad-textarea" class="mock-textarea" placeholder="Start drafting your answers, solutions, and calculations here..." oninput="onEditorChange()">{{ attempt.notes or '' }}</textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Overlay when paused ──────────────────────────────────────────────── -->
+  <div class="mock-overlay" id="paused-overlay">
+    <div class="overlay-title">Exam Paused</div>
+    <p class="overlay-desc">Your preparation session is currently paused. The countdown timer is frozen.</p>
+    <button onclick="toggleTimer()" class="btn-primary" style="padding:0.6rem 1.5rem; font-size:0.8rem;">
+      ▶ Resume Exam
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // Hide main navigation bar & footer for mock focus mode
+  document.getElementById('qh-nav').style.display = 'none';
+  const bottomNav = document.getElementById('qh-bottom-nav');
+  if (bottomNav) bottomNav.style.display = 'none';
+  
+  // Set offset padding-top in page content to 0
+  document.querySelector('.page-content').style.paddingTop = '0';
+  document.querySelector('.page-content').classList.remove('pb-20');
+
+  // Load preview PDF dynamically matching screen width
+  (function initPdf() {
+    const width = window.innerWidth;
+    const paperId = "{{ paper.id }}";
+    let url = '';
+    const isLocalhost = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1' || 
+                        window.location.hostname.startsWith('192.168.') || 
+                        window.location.hostname.startsWith('10.') ||
+                        window.location.hostname.endsWith('.local');
+
+    if (width <= 768 && !isLocalhost) {
+      const directUrl = window.location.origin + '/view/' + paperId + '?t=' + Date.now();
+      url = 'https://docs.google.com/viewer?url=' + encodeURIComponent(directUrl) + '&embedded=true';
+    } else {
+      url = '/view/' + paperId;
+    }
+    document.getElementById('mock-pdf-iframe').src = url;
+  })();
+
+  // Timer Variables
+  const TOTAL_EXAM_SECONDS = 3 * 60 * 60; // 3 hours
+  let elapsedSeconds = parseInt("{{ attempt.time_spent }}");
+  let isTimerRunning = true;
+  let timerInterval = null;
+
+  const timerDisplay = document.getElementById('timer-display');
+  const timerToggleBtn = document.getElementById('timer-toggle-btn');
+  const pausedOverlay = document.getElementById('paused-overlay');
+  const textarea = document.getElementById('notepad-textarea');
+
+  function updateTimerUI() {
+    const remaining = Math.max(TOTAL_EXAM_SECONDS - elapsedSeconds, 0);
+    const h = Math.floor(remaining / 3600).toString().padStart(2, '0');
+    const m = Math.floor((remaining % 3600) / 60).toString().padStart(2, '0');
+    const s = (remaining % 60).toString().padStart(2, '0');
+    timerDisplay.textContent = `${h}:${m}:${s}`;
+    
+    if (remaining === 0) {
+      autoSubmitExam();
+    }
+  }
+
+  function startTimer() {
+    isTimerRunning = true;
+    timerToggleBtn.textContent = '⏸';
+    pausedOverlay.classList.remove('active');
+    timerInterval = setInterval(() => {
+      elapsedSeconds++;
+      updateTimerUI();
+    }, 1000);
+  }
+
+  function stopTimer() {
+    isTimerRunning = false;
+    timerToggleBtn.textContent = '▶';
+    pausedOverlay.classList.add('active');
+    clearInterval(timerInterval);
+    saveExamProgress(); // Auto-save on pause
+  }
+
+  function toggleTimer() {
+    if (isTimerRunning) {
+      stopTimer();
+    } else {
+      startTimer();
+    }
+  }
+
+  // Auto-Save Mechanics
+  let saveTimeout = null;
+  const saveStatusText = document.getElementById('save-status-text');
+  const saveIndicatorDot = document.querySelector('.save-indicator-dot');
+
+  function onEditorChange() {
+    setSaveStatus('typing', 'Saving draft...');
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveExamProgress, 1500); // Debounce saves
+  }
+
+  function setSaveStatus(state, message) {
+    saveStatusText.textContent = message;
+    if (state === 'saved') {
+      saveIndicatorDot.style.background = '#10b981'; // green
+    } else if (state === 'typing') {
+      saveIndicatorDot.style.background = '#f59e0b'; // amber
+    } else if (state === 'error') {
+      saveIndicatorDot.style.background = '#ef4444'; // red
+    }
+  }
+
+  async function saveExamProgress() {
+    const attemptId = "{{ attempt.id }}";
+    const notesContent = textarea.value;
+    
+    try {
+      const res = await fetch(`/student/mock/save/${attemptId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notes: notesContent,
+          time_spent: elapsedSeconds
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSaveStatus('saved', `Saved at ${data.saved_at}`);
+      } else {
+        setSaveStatus('error', 'Save failed');
+      }
+    } catch(e) {
+      console.error(e);
+      setSaveStatus('error', 'Save error');
+    }
+  }
+
+  // Submission Flow
+  let isSubmitting = false;
+
+  async function submitExamPayload() {
+    const attemptId = "{{ attempt.id }}";
+    const notesContent = textarea.value;
+    
+    try {
+      const res = await fetch(`/student/mock/submit/${attemptId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notes: notesContent,
+          time_spent: elapsedSeconds
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        isSubmitting = true;
+        window.location.href = data.redirect_url;
+      } else {
+        alert('Failed to submit exam. Please try again.');
+      }
+    } catch(e) {
+      console.error(e);
+      alert('Error connecting to server. Please try again.');
+    }
+  }
+
+  function confirmSubmission() {
+    stopTimer();
+    const yes = confirm("Are you sure you want to submit your mock exam? This will finalize your notepad draft and award +20 points.");
+    if (yes) {
+      submitExamPayload();
+    } else {
+      startTimer();
+    }
+  }
+
+  function autoSubmitExam() {
+    clearInterval(timerInterval);
+    alert("Time limit reached! Your mock exam answers are being automatically submitted.");
+    submitExamPayload();
+  }
+
+  // Initialize page timer & save loops
+  startTimer();
+  updateTimerUI();
+
+  // Background auto-save interval every 30 seconds
+  const autoSaveInterval = setInterval(() => {
+    if (isTimerRunning) {
+      saveExamProgress();
+    }
+  }, 30000);
+
+  async function deleteAndExit() {
+    stopTimer();
+    const yes = confirm("Are you sure you want to delete this mock exam practice session? This will discard your current notes/draft and return to the dashboard.");
+    if (!yes) {
+      startTimer();
+      return;
+    }
+    
+    try {
+      const attemptId = "{{ attempt.id }}";
+      const res = await fetch(`/api/student/mock/delete/${attemptId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token() }}'
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        isSubmitting = true;
+        window.location.href = '/student/dashboard';
+      } else {
+        alert('Failed to delete practice session: ' + (data.error || 'unknown error'));
+        startTimer();
+      }
+    } catch(e) {
+      console.error(e);
+      alert('Error connecting to server. Please try again.');
+      startTimer();
+    }
+  }
+
+  // Prevent Backspace key from triggering page back navigation in history
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Backspace') {
+      const activeEl = document.activeElement;
+      const isInput = activeEl.tagName === 'INPUT' || 
+                      activeEl.tagName === 'TEXTAREA' || 
+                      activeEl.isContentEditable;
+      if (!isInput) {
+        e.preventDefault();
+        alert('Warning: Backspace navigation is disabled during exams to prevent losing your progress. Please use the notepad editor to write or the header buttons to exit.');
+      }
+    }
+  });
+
+  // Prompt confirmation if user reloads, refreshes or closes the page
+  window.addEventListener('beforeunload', function (e) {
+    if (!isSubmitting) {
+      clearInterval(timerInterval);
+      clearInterval(autoSaveInterval);
+      const confirmationMessage = 'You are currently in an active exam session. Leaving this page will lose unsaved progress.';
+      e.preventDefault();
+      e.returnValue = confirmationMessage;
+      return confirmationMessage;
+    }
+  });
+</script>
+{% endblock %}
+
+{% block footer %}{% endblock %}

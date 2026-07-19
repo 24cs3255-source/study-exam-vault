@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% block title %}Student Login{% endblock %}
+
+{% block content %}
+<style>
+  .auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 1.5rem 3rem;
+    position: relative;
+  }
+
+  .auth-card {
+    width: 100%;
+    max-width: 440px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.5);
+    animation: fadeSlideUp 0.5s ease both;
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .auth-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--apple-blue), var(--apple-purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.3);
+    font-size: 1.5rem;
+  }
+
+  .auth-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-align: center;
+    color: var(--text-hi);
+    margin-bottom: 0.4rem;
+  }
+
+  .auth-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .auth-form { display: flex; flex-direction: column; gap: 1rem; }
+
+  .auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .auth-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .auth-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    color: var(--text-hi);
+    padding: 0.75rem 1rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.22s, box-shadow 0.22s, background 0.22s;
+  }
+  .auth-input::placeholder { color: var(--text-lo); }
+  .auth-input:focus {
+    border-color: var(--apple-blue);
+    background: rgba(0, 0, 0, 0.45);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+  }
+
+  .auth-btn {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--apple-blue), var(--apple-indigo));
+    border: none;
+    border-radius: 12px;
+    padding: 0.85rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+  }
+  .auth-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+  }
+
+  .auth-error {
+    background: rgba(255, 69, 58, 0.12);
+    border: 1px solid rgba(255, 69, 58, 0.3);
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    font-size: 0.82rem;
+    color: #ff6b6b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.2rem 0;
+  }
+  .auth-divider::before,
+  .auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .auth-divider span {
+    font-size: 0.75rem;
+    color: var(--text-lo);
+    font-weight: 500;
+  }
+
+  .auth-footer {
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    margin-top: 1.5rem;
+  }
+  .auth-footer a {
+    color: var(--apple-blue);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+  .auth-footer a:hover {
+    color: var(--apple-purple);
+  }
+</style>
+
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-icon" id="auth-icon-display">👤</div>
+    <h1 class="auth-title">Welcome Back</h1>
+    <p class="auth-subtitle" id="card-subtitle">Sign in to your EXAM-STUDY-VAULT student account</p>
+
+    <!-- Selector Tabs -->
+    <div id="loginSelectorTabs" style="display:flex; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:0.25rem; margin-bottom:1.5rem;">
+      <button type="button" id="tab-student" onclick="switchLoginTab('student')" style="flex:1; background:transparent; border:none; color:var(--text-lo); padding:0.5rem; border-radius:9px; font-size:0.78rem; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.2s;">
+        👤 Student
+      </button>
+      <button type="button" id="tab-moderator" onclick="switchLoginTab('moderator')" style="flex:1; background:transparent; border:none; color:var(--text-lo); padding:0.5rem; border-radius:9px; font-size:0.78rem; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.2s;">
+        🛡 Moderator
+      </button>
+      <button type="button" id="tab-admin" onclick="switchLoginTab('admin')" style="flex:1; background:transparent; border:none; color:var(--text-lo); padding:0.5rem; border-radius:9px; font-size:0.78rem; font-weight:600; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.2s;">
+        🔑 Admin
+      </button>
+    </div>
+
+    {% if error %}
+    <div class="auth-error">
+      <span>⚠️</span> {{ error }}
+    </div>
+    {% endif %}
+
+    <form class="auth-form" id="loginForm" method="POST" action="/student/login">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="login_role" id="login_role" value="student">
+
+      <div class="auth-field">
+        <label class="auth-label" id="login_id_label" for="login_id">Username or Email</label>
+        <input type="text" id="login_id" name="login_id" class="auth-input"
+               placeholder="Enter your username or email" required autofocus />
+      </div>
+
+      <div class="auth-field">
+        <label class="auth-label" for="password">Password</label>
+        <input type="password" id="password" name="password" class="auth-input"
+               placeholder="Enter your password" required />
+        <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.25rem; margin-bottom:0.25rem;">
+          <input type="checkbox" id="show-password" onchange="togglePasswordVisibility()" style="cursor:pointer; width:14px; height:14px; accent-color:var(--apple-blue);" />
+          <label for="show-password" style="font-size:0.78rem; color:var(--text-mid); cursor:pointer; user-select:none; font-family:'Inter',sans-serif;">Show Password</label>
+        </div>
+      </div>
+
+      <button type="submit" id="submit-btn" class="auth-btn">Sign In →</button>
+    </form>
+
+    <div id="signup-link-div">
+      <div class="auth-divider"><span>New here?</span></div>
+      <div class="auth-footer">
+        Don't have an account? <a href="/student/register">Create one now</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TABS = ['student', 'moderator', 'admin'];
+
+  function clearTabs() {
+    TABS.forEach(r => {
+      const t = document.getElementById(`tab-${r}`);
+      if (t) { t.style.background = 'transparent'; t.style.color = 'var(--text-lo)'; }
+    });
+  }
+
+  function activateTab(tabId, grad) {
+    clearTabs();
+    const t = document.getElementById(tabId);
+    if (t) { t.style.background = grad; t.style.color = '#fff'; }
+  }
+
+  function switchLoginTab(role) {
+    const form          = document.getElementById('loginForm');
+    const loginIdInput  = document.getElementById('login_id');
+    const loginIdLabel  = document.getElementById('login_id_label');
+    const cardSubtitle  = document.getElementById('card-subtitle');
+    const signupLinkDiv = document.getElementById('signup-link-div');
+    const authIcon      = document.getElementById('auth-icon-display');
+    const submitBtn     = document.getElementById('submit-btn');
+
+    const loginRoleInput = document.getElementById('login_role');
+
+    if (role === 'student') {
+      form.action = '/student/login';
+      loginIdInput.name = 'login_id';
+      loginIdInput.placeholder = 'Enter your username or email';
+      loginIdLabel.textContent = 'Username or Email';
+      cardSubtitle.textContent = 'Sign in to your EXAM-STUDY-VAULT student account';
+      signupLinkDiv.style.display = 'block';
+      authIcon.textContent = '👤';
+      submitBtn.style.background = 'linear-gradient(135deg, var(--apple-blue), var(--apple-indigo))';
+      activateTab('tab-student', 'linear-gradient(135deg, var(--apple-blue), var(--apple-indigo))');
+      if (loginRoleInput) loginRoleInput.value = 'student';
+
+    } else if (role === 'moderator') {
+      form.action = '/login';
+      loginIdInput.name = 'username';
+      loginIdInput.placeholder = 'Enter your moderator username';
+      loginIdLabel.textContent = 'Moderator Username';
+      cardSubtitle.textContent = 'Sign in to the department moderator console';
+      signupLinkDiv.style.display = 'none';
+      authIcon.textContent = '🛡';
+      submitBtn.style.background = 'linear-gradient(135deg, var(--apple-purple), #6366f1)';
+      activateTab('tab-moderator', 'linear-gradient(135deg, var(--apple-purple), #6366f1)');
+      // DB role for moderators is 'staff' — must match what auth.py checks
+      if (loginRoleInput) loginRoleInput.value = 'staff';
+
+    } else { // admin
+      form.action = '/login';
+      loginIdInput.name = 'username';
+      loginIdInput.placeholder = 'Enter your admin username';
+      loginIdLabel.textContent = 'Admin Username';
+      cardSubtitle.textContent = 'Sign in to the EXAM-STUDY-VAULT Admin Control Panel';
+      signupLinkDiv.style.display = 'none';
+      authIcon.textContent = '🔑';
+      submitBtn.style.background = 'linear-gradient(135deg, #f59e0b, #ef4444)';
+      activateTab('tab-admin', 'linear-gradient(135deg, #f59e0b, #ef4444)');
+      if (loginRoleInput) loginRoleInput.value = 'admin';
+    }
+  }
+
+  // Init on page load
+  (function init() {
+    const flaskRole = "{{ active_role or '' }}";
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlRole   = urlParams.get('role');
+    const forceStudent = urlParams.get('force_student') === 'true';
+    
+    // Hide selector tabs only if force_student=true (restricted student redirect)
+    const tabsContainer = document.getElementById('loginSelectorTabs');
+    if (tabsContainer && forceStudent) {
+      tabsContainer.style.display = 'none';
+    }
+
+    const role      = flaskRole || urlRole || 'student';
+    switchLoginTab(role);
+  })();
+
+  function togglePasswordVisibility() {
+    const pwd = document.getElementById('password');
+    const chk = document.getElementById('show-password');
+    if (pwd && chk) {
+      pwd.type = chk.checked ? 'text' : 'password';
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Exam Results — {{ paper.subject_name }}{% endblock %}
+
+{% block content %}
+<style>
+  .result-page {
+    padding: 7rem 2rem 4rem;
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 10;
+  }
+
+  .result-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeSlideUp 0.5s ease both;
+  }
+
+  .result-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    display: inline-block;
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  }
+
+  .result-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 850;
+    font-size: 2rem;
+    color: var(--text-hi);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-desc {
+    font-size: 0.95rem;
+    color: var(--text-mid);
+    max-width: 500px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* Stats card */
+  .result-stats-card {
+    background: rgba(13, 19, 32, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+    margin-bottom: 2rem;
+    animation: fadeSlideUp 0.6s 0.1s ease both;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 2rem;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-hi);
+  }
+
+  .stat-lbl {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-lo);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 0.3rem;
+  }
+
+  /* Review pane */
+  .review-section-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-hi);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .notepad-review-pane {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    padding: 1.5rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text-mid);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  /* Action Buttons layout */
+  .result-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    animation: fadeSlideUp 0.6s 0.2s ease both;
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0); }
+    to   { transform: scale(1); }
+  }
+
+  @media (max-width: 640px) {
+    .stats-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+    .result-stats-card { padding: 1.8rem 1.4rem; }
+    .result-actions { flex-direction: column; width: 100%; }
+    .result-actions .btn-primary, .result-actions .btn-outline { width: 100%; justify-content: center; }
+  }
+</style>
+
+<div class="result-page">
+
+  <!-- Header -->
+  <div class="result-header">
+    <span class="result-icon">🎉</span>
+    <h1 class="result-title">Exam Practice Completed!</h1>
+    <p class="result-desc">Great job completing your mock session for <strong>{{ paper.subject_name }}</strong>. Your submission is locked and saved.</p>
+  </div>
+
+  <!-- Stats Card -->
+  <div class="result-stats-card">
+    <div class="stats-grid">
+      <!-- Stat 1: Time spent -->
+      <div class="stat-item">
+        <div class="stat-val" id="time-spent-display">00:00</div>
+        <div class="stat-lbl">Time Spent</div>
+      </div>
+      <!-- Stat 2: Points Earned -->
+      <div class="stat-item">
+        <div class="stat-val" style="color:#10b981;">+20 PTS</div>
+        <div class="stat-lbl">Points Awarded</div>
+      </div>
+      <!-- Stat 3: Submitted date -->
+      <div class="stat-item">
+        <div class="stat-val" style="font-size:1.15rem; line-height:2.2rem;">
+          {{ attempt.submitted_at.strftime('%d %b %Y') if attempt.submitted_at else '' }}
+        </div>
+        <div class="stat-lbl">Submission Date</div>
+      </div>
+    </div>
+
+    <!-- Notepad Review -->
+    <div>
+      <div class="review-section-title">
+        <span>📝</span> Your Saved Solution Draft
+      </div>
+      {% if attempt.notes %}
+        <div class="notepad-review-pane">{{ attempt.notes }}</div>
+      {% else %}
+        <div class="notepad-review-pane" style="font-style: italic; color: var(--text-lo); text-align: center;">No answers were written in the notepad during this session.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="result-actions">
+    <a href="/student/mock/download-pdf/{{ attempt.id }}" class="btn-outline" style="color:var(--primary); border-color:rgba(79,70,229,0.3); background:rgba(79,70,229,0.05);">
+      📥 Download Answer PDF
+    </a>
+    <a href="/student/dashboard" class="btn-primary">
+      👤 Go to My Dashboard
+    </a>
+    <a href="/papers" class="btn-outline">
+      📄 Browse Other Papers
+    </a>
+
+  </div>
+
+</div>
+
+<script>
+  // Format elapsed seconds to readable timer
+  (function formatTime() {
+    const totalSeconds = parseInt("{{ attempt.time_spent }}");
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    
+    let display = '';
+    if (h > 0) {
+      display += `${h}h ${m}m ${s}s`;
+    } else if (m > 0) {
+      display += `${m}m ${s}s`;
+    } else {
+      display += `${s}s`;
+    }
+    document.getElementById('time-spent-display').textContent = display;
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,1133 @@
+{% extends "base.html" %}
+{% block title %}Admin Control Panel – EXAM-STUDY-VAULT{% endblock %}
+
+{% block extra_head %}
+<style>
+  .a-wrap, .a-nav {
+    --bg: var(--void);
+    --bg2: var(--void-glow);
+    --bg-panel: var(--panel);
+    --border: var(--edge);
+    --primary: var(--apple-blue);
+    --primary-glow: var(--primary-glow);
+    --accent: var(--apple-indigo);
+    --accent-glow: var(--primary-glow);
+    --gold: var(--apple-orange);
+    --green: var(--apple-green);
+    --red: var(--apple-red);
+    --orange: var(--apple-orange);
+    --hi: var(--text-hi);
+    --mid: var(--text-mid);
+    --lo: var(--text-lo);
+  }
+
+  /* ── Navbar ── */
+  .a-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: var(--bg2); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    height: 65px; padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  }
+  .a-nav-logo {
+    font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.15rem;
+    background: linear-gradient(135deg, var(--accent), var(--primary));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none;
+  }
+  .a-nav-badge {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    background: var(--primary-glow); border: 1px solid var(--border);
+    color: var(--primary); padding: 0.25rem 0.75rem; border-radius: 20px;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .a-nav-right { display: flex; align-items: center; gap: 1rem; }
+  .btn-a-logout {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.45rem 1rem; border-radius: 10px; font-size: 0.8rem; font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    border: 1px solid var(--border); color: var(--red);
+    background: var(--primary-glow); text-decoration: none; transition: all 0.2s;
+  }
+  .btn-a-logout:hover { background: var(--border); transform: translateY(-1px); }
+
+  /* ── Sidebar ── */
+  .a-wrap { display: flex; gap: 0; min-height: calc(100vh - 65px); margin-top: 65px; position: relative; }
+  .a-sidebar {
+    width: 230px; min-width: 230px; background: var(--bg2);
+    border-right: 1px solid var(--border); padding: 1.5rem 1rem;
+    display: flex; flex-direction: column; gap: 0.35rem; position: sticky; top: 65px; height: calc(100vh - 65px);
+  }
+  .a-sidebar-label { font-size: 0.65rem; color: var(--lo); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; padding: 0.75rem 0.75rem 0.25rem; }
+  .side-btn {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.65rem 0.95rem; border-radius: 12px; font-size: 0.84rem; font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif; color: var(--mid);
+    background: transparent; border: none; cursor: pointer; text-align: left; width: 100%;
+    transition: all 0.2s ease; text-decoration: none;
+  }
+  .side-btn svg { transition: transform 0.2s; }
+  .side-btn:hover { background: var(--border); color: var(--hi); }
+  .side-btn:hover svg { transform: translateX(2px); }
+  .side-btn.active {
+    background: var(--primary-glow);
+    color: var(--primary);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 15px var(--primary-glow);
+  }
+
+  /* ── Main content ── */
+  .a-main { flex: 1; padding: 2.5rem 2.5rem 6rem; max-width: 1100px; }
+
+  /* Sections */
+  .a-section { display: none; animation: fadeIn 0.3s ease; }
+  .a-section.visible { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Flash ── */
+  .a-flash {
+    padding: 0.85rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem;
+    font-size: 0.85rem; display: flex; align-items: center; gap: 0.65rem;
+  }
+  .a-flash.success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); color: #34d399; }
+  .a-flash.error   { background: rgba(244,63,90,0.08); border: 1px solid rgba(244,63,90,0.25); color: #fb7185; }
+
+  /* ── Section headings ── */
+  .sec-title {
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.6rem; font-weight: 800;
+    letter-spacing: -0.02em; margin-bottom: 1.8rem;
+    background: linear-gradient(135deg, var(--hi), var(--mid));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  /* ── Stat Cards ── */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem; }
+  .stat-card {
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 20px; padding: 1.5rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    position: relative; overflow: hidden;
+  }
+  .stat-card::after {
+    content: ''; position: absolute; left: 0; bottom: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    opacity: 0.7;
+  }
+  .stat-card:hover { background: var(--bg2); transform: translateY(-4px); border-color: var(--primary); }
+  .stat-emoji { font-size: 1.65rem; margin-bottom: 0.5rem; display: block; }
+  .stat-val { font-family: 'Plus Jakarta Sans',sans-serif; font-size: 2.2rem; font-weight: 800; line-height: 1.1; margin-top: 0.25rem; }
+  .stat-lbl { font-size: 0.75rem; color: var(--lo); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.4rem; font-weight: 700; }
+
+  /* ── Panels ── */
+  .a-panel {
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 22px;
+    overflow: hidden; margin-bottom: 2rem; box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  }
+  .a-panel-hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.25rem 1.75rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.75rem;
+    background: rgba(255,255,255,0.01);
+  }
+  .a-panel-title { font-family: 'Plus Jakarta Sans',sans-serif; font-size: 1rem; font-weight: 700; color: var(--hi); display: flex; align-items: center; gap: 0.65rem; }
+  .cnt { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+  .cnt.gold   { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: #fde68a; }
+  .cnt.orange { background: rgba(249,115,22,0.12);  border: 1px solid rgba(249,115,22,0.3);  color: var(--orange); }
+  .cnt.blue   { background: rgba(6,182,212,0.12);  border: 1px solid rgba(6,182,212,0.3);  color: #7dd3fc; }
+
+  /* ── Table ── */
+  .a-table { width: 100%; border-collapse: collapse; }
+  .a-table th { text-align:left; padding:1rem 1.5rem; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--lo); border-bottom:1px solid var(--border); }
+  .a-table td { padding:1.1rem 1.5rem; font-size:0.85rem; color:var(--mid); border-bottom:1px solid var(--border); }
+  .a-table tr:hover td { background: var(--border); }
+  .a-table tr:last-child td { border-bottom: none; }
+
+  /* ── Badges ── */
+  .dept-badge {
+    display:inline-block; padding:0.25rem 0.65rem; border-radius:8px; font-size:0.72rem; font-weight:700;
+    background:var(--primary-glow); border:1px solid var(--border); color:var(--primary);
+  }
+  .type-badge {
+    display:inline-block; padding:0.25rem 0.65rem; border-radius:8px; font-size:0.72rem; font-weight:700;
+    background:var(--primary-glow); border:1px solid var(--border); color:var(--primary);
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    display:inline-flex; align-items:center; gap:0.5rem;
+    padding:0.65rem 1.4rem; border-radius:12px; font-size:0.84rem; font-weight:700;
+    font-family:'Plus Jakarta Sans',sans-serif; color:#fff; border:none; cursor:pointer;
+    background:linear-gradient(135deg, var(--primary), var(--accent));
+    box-shadow:0 4px 15px var(--primary-glow); transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .btn-primary:hover { filter:brightness(1.15); transform:translateY(-1.5px); box-shadow:0 6px 20px var(--primary-glow); }
+  .btn-danger {
+    display:inline-flex; align-items:center; gap:0.25rem;
+    padding:0.35rem 0.8rem; border-radius:8px; font-size:0.75rem; font-weight:700;
+    color:var(--red); background:var(--primary-glow); border:1px solid var(--border); cursor:pointer; transition:all 0.2s;
+  }
+  .btn-danger:hover { background:var(--border); }
+  .btn-approve {
+    display:inline-flex; align-items:center; gap:0.25rem;
+    padding:0.35rem 0.8rem; border-radius:8px; font-size:0.75rem; font-weight:700;
+    color:var(--green); background:var(--primary-glow); border:1px solid var(--border); cursor:pointer; transition:all 0.2s;
+  }
+  .btn-approve:hover { background:var(--border); }
+  .btn-reject {
+    display:inline-flex; align-items:center; gap:0.25rem;
+    padding:0.35rem 0.8rem; border-radius:8px; font-size:0.75rem; font-weight:700;
+    color:var(--red); background:var(--primary-glow); border:1px solid var(--border); cursor:pointer; transition:all 0.2s;
+  }
+  .btn-reject:hover { background:var(--border); }
+  .btn-preview {
+    display:inline-flex; align-items:center; gap:0.25rem;
+    padding:0.35rem 0.8rem; border-radius:8px; font-size:0.75rem; font-weight:700;
+    color:var(--mid); background:var(--bg-panel); border:1px solid var(--border); text-decoration:none; transition:all 0.2s;
+  }
+  .btn-preview:hover { color:var(--hi); background:var(--border); }
+
+  /* ── Forms ── */
+  .f-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; padding:1.75rem; }
+  @media (max-width:640px) { .f-grid { grid-template-columns:1fr; } }
+  .f-grid .full { grid-column:1/-1; }
+  .f-label { display:block; font-size:0.7rem; color:var(--lo); text-transform:uppercase; letter-spacing:0.06em; font-weight:700; margin-bottom:0.4rem; }
+  .f-input {
+    width:100%; background:var(--bg-panel); border:1px solid var(--border);
+    border-radius:10px; padding:0.75rem 1rem; font-family:'Inter',sans-serif;
+    font-size:0.88rem; color:var(--hi); outline:none; box-sizing:border-box; transition:all 0.2s;
+  }
+  .f-input:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-glow); }
+  .f-input::placeholder { color:var(--lo); }
+  select.f-input {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    background-color: rgba(10, 15, 30, 0.95) !important;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+    color: #f1f5f9 !important;
+    border-color: rgba(100, 116, 139, 0.35) !important;
+  }
+  select.f-input option {
+    background-color: #0d1320;
+    color: #f1f5f9;
+  }
+
+  /* ── Drop zone ── */
+  .drop-zone {
+    border: 2px dashed var(--border); border-radius:16px;
+    padding: 2.5rem 1.5rem; text-align:center; cursor:pointer; transition:all 0.3s ease;
+    background: var(--bg-panel);
+  }
+  .drop-zone:hover, .drop-zone.drag-over { border-color:var(--primary); background:var(--primary-glow); box-shadow: 0 0 20px var(--primary-glow); }
+
+  /* ── Progress bar (dept breakdown) ── */
+  .dept-bar-row { display:flex; align-items:center; gap:1rem; margin-bottom:0.85rem; }
+  .dept-bar-label { font-size:0.82rem; color:var(--mid); width:95px; flex-shrink:0; font-weight:600; }
+  .dept-bar-track { flex:1; background:var(--bg-panel); border-radius:20px; height:8px; border:1px solid var(--border); }
+  .dept-bar-fill { height:6px; border-radius:20px; background:linear-gradient(90deg, var(--primary), var(--accent)); transition:width 0.8s ease; }
+  .dept-bar-count { font-size:0.82rem; color:var(--lo); width:32px; text-align:right; flex-shrink:0; font-weight:700; }
+
+  /* ── Avatar ── */
+  .av {
+    width:34px; height:34px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    font-size:0.8rem; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif; flex-shrink:0;
+  }
+
+  /* ── Search ── */
+  .search-in {
+    background:var(--bg-panel); border:1px solid var(--border);
+    border-radius:10px; padding:0.55rem 1rem; font-size:0.84rem; color:var(--hi);
+    outline:none; max-width:240px; width:100%; transition:all 0.2s;
+  }
+  .search-in:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-glow); }
+
+  /* ── Mobile Menu and Overlay ── */
+  @media (max-width:768px) {
+    #menuToggle { display: block !important; }
+    .a-sidebar {
+      display: flex;
+      position: fixed;
+      top: 65px;
+      left: -240px;
+      width: 240px;
+      height: calc(100vh - 65px);
+      background: var(--bg2);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 1100;
+      transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-right: 1px solid var(--border);
+    }
+    .a-sidebar.open {
+      left: 0;
+    }
+    .a-main { padding: 1.5rem 1rem 5rem; }
+  }
+</style>
+{% endblock %}
+
+{% block navbar %}
+<!-- ── Top Navbar ── -->
+<nav class="a-nav">
+  <div style="display:flex; align-items:center; gap:0.5rem;">
+    <!-- Hamburger button for mobile menu -->
+    <button id="menuToggle" onclick="toggleAdminSidebar()" style="display:none; background:transparent; border:none; color:var(--hi); cursor:pointer; padding:6px; outline:none; -webkit-tap-highlight-color:transparent;">
+      <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <span class="a-nav-logo">🔑 EXAM-STUDY-VAULT Admin</span>
+    <span class="a-nav-badge">Control Panel</span>
+  </div>
+  <div class="a-nav-right">
+    <span style="font-size:0.78rem; color:var(--lo);">
+      Signed in as <strong style="color:var(--mid);">{{ admin.username }}</strong>
+    </span>
+
+    <!-- Theme Switcher Container -->
+    <div class="qh-theme-switcher-container" style="position:relative; display: inline-block; vertical-align: middle;">
+      <button type="button" class="qh-theme-btn" onclick="toggleThemeDropdown()" aria-label="Switch Theme" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); color:var(--text-hi); width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; outline:none; transition: all 0.2s;">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
+
+      <!-- Dropdown -->
+      <div id="qh-theme-dropdown" style="display:none; position:absolute; right:0; top:calc(100% + 8px); background:rgba(13, 19, 32, 0.96); border:1px solid rgba(255,255,255,0.08); border-top:1px solid rgba(255,255,255,0.15); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5); backdrop-filter:blur(16px); z-index:999; padding:0.5rem; width:170px; flex-direction:column; gap:0.25rem;">
+        <button type="button" onclick="setTheme('default')" class="theme-select-opt" style="display:flex; align-items:center; gap:0.5rem; width:100%; border:none; background:transparent; padding:0.5rem; color:var(--text-hi); cursor:pointer; font-size:0.82rem; font-family:'Plus Jakarta Sans',sans-serif; text-align:left; border-radius:8px; transition:background 0.2s;">
+          <span style="width:10px; height:10px; border-radius:50%; background:#4f46e5; border:1px solid rgba(255,255,255,0.2);"></span>
+          <span>Obsidian Space</span>
+        </button>
+        <button type="button" onclick="setTheme('emerald')" class="theme-select-opt" style="display:flex; align-items:center; gap:0.5rem; width:100%; border:none; background:transparent; padding:0.5rem; color:var(--text-hi); cursor:pointer; font-size:0.82rem; font-family:'Plus Jakarta Sans',sans-serif; text-align:left; border-radius:8px; transition:background 0.2s;">
+          <span style="width:10px; height:10px; border-radius:50%; background:#10b981; border:1px solid rgba(255,255,255,0.2);"></span>
+          <span>Emerald Aurora</span>
+        </button>
+        <button type="button" onclick="setTheme('synthwave')" class="theme-select-opt" style="display:flex; align-items:center; gap:0.5rem; width:100%; border:none; background:transparent; padding:0.5rem; color:var(--text-hi); cursor:pointer; font-size:0.82rem; font-family:'Plus Jakarta Sans',sans-serif; text-align:left; border-radius:8px; transition:background 0.2s;">
+          <span style="width:10px; height:10px; border-radius:50%; background:#f43f5e; border:1px solid rgba(255,255,255,0.2);"></span>
+          <span>Cyber Neon Rose</span>
+        </button>
+        <button type="button" onclick="setTheme('ocean')" class="theme-select-opt" style="display:flex; align-items:center; gap:0.5rem; width:100%; border:none; background:transparent; padding:0.5rem; color:var(--text-hi); cursor:pointer; font-size:0.82rem; font-family:'Plus Jakarta Sans',sans-serif; text-align:left; border-radius:8px; transition:background 0.2s;">
+          <span style="width:10px; height:10px; border-radius:50%; background:#06b6d4; border:1px solid rgba(255,255,255,0.2);"></span>
+          <span>Ocean Breeze</span>
+        </button>
+        <button type="button" onclick="setTheme('royal')" class="theme-select-opt" style="display:flex; align-items:center; gap:0.5rem; width:100%; border:none; background:transparent; padding:0.5rem; color:var(--text-hi); cursor:pointer; font-size:0.82rem; font-family:'Plus Jakarta Sans',sans-serif; text-align:left; border-radius:8px; transition:background 0.2s;">
+          <span style="width:10px; height:10px; border-radius:50%; background:#6366f1; border:1px solid rgba(0,0,0,0.15);"></span>
+          <span>Royal Velvet</span>
+        </button>
+      </div>
+    </div>
+
+    <a href="javascript:void(0)" onclick="openLogoutModal()" class="btn-a-logout">⎋ Logout</a>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- Mobile sidebar overlay click handler -->
+<div id="sidebarOverlay" onclick="toggleAdminSidebar()" style="display:none; position:fixed; inset:0; top:60px; background:rgba(0,0,0,0.5); z-index:1000; backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);"></div>
+
+<div class="a-wrap">
+
+  <!-- ── Sidebar ── -->
+  <aside class="a-sidebar">
+    <div class="a-sidebar-label">Platform</div>
+    <button class="side-btn active" id="btn-overview" onclick="showSection('overview')">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+      Overview
+    </button>
+    <button class="side-btn" id="btn-students" onclick="showSection('students')">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      Students
+    </button>
+    <div class="a-sidebar-label" style="margin-top:0.75rem;">Management</div>
+    <button class="side-btn" id="btn-officers" onclick="showSection('officers')">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+      Officers
+    </button>
+    <button class="side-btn" id="btn-activity" onclick="showSection('activity')">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      Pending
+    </button>
+    <button class="side-btn" id="btn-dept-papers" onclick="showSection('dept-papers')">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      Dept Papers
+    </button>
+    <button class="side-btn" id="btn-most-downloaded" onclick="showSection('most-downloaded')">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+      Top Downloads
+    </button>
+    <div class="a-sidebar-label" style="margin-top:0.75rem;">Upload</div>
+    <button class="side-btn" id="btn-upload" onclick="showSection('upload')">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+      Upload Paper
+    </button>
+    <a href="/admin/bulk-upload" class="side-btn" style="text-decoration:none;">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+      Bulk Upload
+    </a>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main class="a-main">
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+      <div class="a-flash {{ 'success' if category == 'success' else 'error' }}">
+        <span>{{ '✅' if category == 'success' else '⚠️' }}</span> {{ message }}
+      </div>
+      {% endfor %}
+    {% endwith %}
+
+    <!-- ─────────────────────────────── OVERVIEW ─────────────────────────────── -->
+    <section class="a-section visible" id="section-overview">
+      <h2 class="sec-title">Platform Overview</h2>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-emoji-wrapper" style="color:var(--accent); background:var(--primary-glow); padding:0.5rem; border-radius:10px; display:inline-flex; margin-bottom:0.5rem;">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <div class="stat-val" style="color:var(--accent);">{{ student_count }}</div>
+          <div class="stat-lbl">Total Students</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-emoji-wrapper" style="color:var(--gold); background:var(--primary-glow); padding:0.5rem; border-radius:10px; display:inline-flex; margin-bottom:0.5rem;">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          </div>
+          <div class="stat-val" style="color:var(--gold);">{{ total_papers }}</div>
+          <div class="stat-lbl">Question Papers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-emoji-wrapper" style="color:var(--primary); background:var(--primary-glow); padding:0.5rem; border-radius:10px; display:inline-flex; margin-bottom:0.5rem;">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <div class="stat-val" style="color:var(--primary);">{{ moderator_count }}</div>
+          <div class="stat-lbl">Moderators</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-emoji-wrapper" style="color:var(--orange); background:var(--primary-glow); padding:0.5rem; border-radius:10px; display:inline-flex; margin-bottom:0.5rem;">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <div class="stat-val" style="color:var(--orange);">{{ pending_papers|length }}</div>
+          <div class="stat-lbl">Pending Review</div>
+        </div>
+      </div>
+
+      <!-- Dept breakdown -->
+      <div class="a-panel">
+        <div class="a-panel-hdr">
+          <h3 class="a-panel-title">🏛 Students by Department</h3>
+        </div>
+        <div style="padding:1.4rem;">
+          {% set max_count = dept_breakdown | map(attribute='count') | max | default(1) %}
+          {% for row in dept_breakdown %}
+          <div class="dept-bar-row">
+            <span class="dept-bar-label">{{ row.dept }}</span>
+            <div class="dept-bar-track">
+              <div class="dept-bar-fill" data-width="{{ ((row.count / [max_count,1]|max) * 100)|int }}"></div>
+            </div>
+            <span class="dept-bar-count">{{ row.count }}</span>
+          </div>
+          {% endfor %}
+          {% if not dept_breakdown %}
+          <p style="color:var(--lo); font-size:0.84rem;">No department data yet.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Recent registrations -->
+      <div class="a-panel">
+        <div class="a-panel-hdr">
+          <h3 class="a-panel-title">🆕 Recent Registrations</h3>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="a-table">
+            <thead><tr>
+              <th>Student</th><th>Dept</th><th>Points</th><th>Joined</th>
+            </tr></thead>
+            <tbody>
+              {% for s in recent_students %}
+              <tr>
+                <td>
+                  <div style="display:flex; align-items:center; gap:0.65rem;">
+                    <span class="av" data-color="{{ s.avatar_color }}">
+                      {{ s.get_initials() }}
+                    </span>
+                    <div>
+                      <div style="color:var(--hi); font-weight:600; font-size:0.84rem;">{{ s.display_name or s.username }}</div>
+                      <div style="color:var(--lo); font-size:0.73rem;">@{{ s.username }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  {% if s.department %}<span class="dept-badge">{{ s.department }}</span>{% else %}—{% endif %}
+                </td>
+                <td style="color:var(--gold); font-weight:600;">{{ s.points }}</td>
+                <td style="font-size:0.73rem; color:var(--lo);">{{ s.created_at.strftime('%d %b %Y') }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="4" style="text-align:center; padding:2rem; color:var(--lo);">No students registered yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────── STUDENTS ─────────────────────────────── -->
+    <section class="a-section" id="section-students">
+      <h2 class="sec-title">Student Overview</h2>
+
+      <div class="a-panel">
+        <div class="a-panel-hdr">
+          <h3 class="a-panel-title">
+            🏆 Top Students by Points
+            <span class="cnt gold">{{ student_count }} total</span>
+          </h3>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="a-table">
+            <thead><tr>
+              <th>#</th><th>Student</th><th>Dept</th><th>Points</th><th>Joined</th>
+            </tr></thead>
+            <tbody>
+              {% for s in top_students %}
+              <tr>
+                <td style="color:var(--lo); font-size:0.78rem;">#{{ loop.index }}</td>
+                <td>
+                  <div style="display:flex; align-items:center; gap:0.65rem;">
+                    <span class="av" data-color="{{ s.avatar_color }}">
+                      {{ s.get_initials() }}
+                    </span>
+                    <div>
+                      <div style="color:var(--hi); font-weight:600; font-size:0.84rem;">{{ s.display_name or s.username }}</div>
+                      <div style="color:var(--lo); font-size:0.73rem;">@{{ s.username }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>{% if s.department %}<span class="dept-badge">{{ s.department }}</span>{% else %}—{% endif %}</td>
+                <td>
+                  <span style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:1rem; color:var(--gold);">{{ s.points }}</span>
+                </td>
+                <td style="font-size:0.73rem; color:var(--lo);">{{ s.created_at.strftime('%d %b %Y') }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--lo);">No students registered yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────── OFFICERS ─────────────────────────────── -->
+    <section class="a-section" id="section-officers">
+      <h2 class="sec-title">Officer Management</h2>
+
+      <!-- Create Moderator -->
+      <div class="a-panel" style="border-color:rgba(175,82,222,0.15);">
+        <div class="a-panel-hdr" style="background:rgba(175,82,222,0.03);">
+          <h3 class="a-panel-title">➕ Create New Moderator</h3>
+        </div>
+        <form method="POST" action="/admin/staff/create">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <div class="f-grid">
+            <div>
+              <label class="f-label">Username</label>
+              <input type="text" name="username" class="f-input" placeholder="e.g. cs_moderator" required />
+            </div>
+            <div>
+              <label class="f-label">Password</label>
+              <input type="password" name="password" class="f-input" placeholder="Strong password" required />
+            </div>
+            <div>
+              <label class="f-label">Assign Department</label>
+              <select name="department" class="f-input" required>
+                <option value="" disabled selected>Select department...</option>
+                {% for d in all_depts %}
+                <option value="{{ d }}">{{ d }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">
+                Create Moderator
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Moderator List -->
+      <div class="a-panel">
+        <div class="a-panel-hdr">
+          <h3 class="a-panel-title">
+            🛡 Active Moderators
+            <span class="cnt gold">{{ moderator_count }}</span>
+          </h3>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="a-table">
+            <thead><tr>
+              <th>Username</th><th>Department</th><th>Role</th><th>Actions</th>
+            </tr></thead>
+            <tbody>
+              {% for s in staff_users %}
+              <tr>
+                <td style="color:var(--hi); font-weight:600;">{{ s.username }}</td>
+                <td>{% if s.department %}<span class="dept-badge">{{ s.department }}</span>{% else %}<span style="color:var(--lo);">—</span>{% endif %}</td>
+                <td><span style="font-size:0.72rem; color:#e0aaff; background:rgba(175,82,222,0.12); border:1px solid rgba(175,82,222,0.3); padding:0.2rem 0.5rem; border-radius:6px; font-weight:600;">Staff Moderator</span></td>
+                <td>
+                  <form method="POST" action="/admin/staff/delete/{{ s.id }}" style="display:inline;"
+                        onsubmit="return confirm('Delete moderator {{ s.username }}? This cannot be undone.')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button type="submit" class="btn-danger">✕ Delete</button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" style="text-align:center; padding:2rem; color:var(--lo);">
+                  No moderators yet. Create one above!
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────── ACTIVITY (PENDING) ────────────────────── -->
+    <section class="a-section" id="section-activity">
+      <h2 class="sec-title">Pending Contributions</h2>
+      <div class="a-panel" style="border-color:rgba(255,149,0,0.15);">
+        <div class="a-panel-hdr" style="background:rgba(255,149,0,0.03);">
+          <h3 class="a-panel-title">
+            ⏳ All Pending Papers
+            <span class="cnt orange" id="allPendingCount">{{ pending_papers|length }}</span>
+          </h3>
+          <input type="text" class="search-in" placeholder="Search..." oninput="filterPending(this.value)" />
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="a-table">
+            <thead><tr>
+              <th>Dept</th><th>Class</th><th>Sem</th><th>Code</th><th>Subject</th><th>Type</th><th>Year</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="pendingTbody">
+              {% for p in pending_papers %}
+              <tr id="prow-{{ p.id }}" class="pending-row" data-search="{{ p.department }} {{ p.subject_code }} {{ p.subject_name }} {{ p.year }}">
+                <td><span class="dept-badge">{{ p.department }}</span></td>
+                <td>{{ p.class_name or '—' }}</td>
+                <td>{{ p.semester }}</td>
+                <td style="color:#7dd3fc; font-weight:600;">{{ p.subject_code }}</td>
+                <td style="color:var(--hi); font-weight:500; max-width:160px;">{{ p.subject_name }}</td>
+                <td><span class="type-badge">{{ p.exam_type }}</span></td>
+                <td>{{ p.year }}</td>
+                <td>
+                  <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+                    <a href="/static/uploads/{{ p.filename }}" target="_blank" class="btn-preview">Preview</a>
+                    <button class="btn-approve" onclick="moderateAdmin(this)" data-id="{{ p.id }}" data-action="approve">✓</button>
+                    <button class="btn-reject"  onclick="moderateAdmin(this)" data-id="{{ p.id }}" data-action="reject">✕</button>
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr id="noPendingRow">
+                <td colspan="8" style="text-align:center; padding:2.5rem; color:var(--lo);">
+                  ✅ No pending contributions across all departments!
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────── UPLOAD PAPER ─────────────────────────── -->
+    <section class="a-section" id="section-upload">
+      <h2 class="sec-title">Upload Question Paper</h2>
+      <div class="a-panel" style="border-color:rgba(245,158,11,0.15);">
+        <div class="a-panel-hdr" style="background:rgba(245,158,11,0.03);">
+          <h3 class="a-panel-title">📤 Upload to Any Department</h3>
+        </div>
+
+        <form method="POST" action="/admin/upload" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <div class="f-grid">
+
+            <!-- Drop zone -->
+            <div class="full">
+              <div class="drop-zone" id="dropZone"
+                   onclick="document.getElementById('pdf_file').click()"
+                   ondragover="event.preventDefault(); this.classList.add('drag-over')"
+                   ondragleave="this.classList.remove('drag-over')"
+                   ondrop="handleDrop(event)">
+                <div style="font-size:2.2rem; margin-bottom:0.4rem;">📄</div>
+                <p style="color:var(--hi); font-family:'Plus Jakarta Sans',sans-serif; font-weight:600; font-size:0.9rem;" id="dropLabel">
+                  Click or drag & drop PDF here
+                </p>
+                <p style="color:var(--lo); font-size:0.73rem; margin-top:0.3rem;">Max 50 MB · PDF only</p>
+                <input type="file" id="pdf_file" name="pdf_file" accept=".pdf"
+                       style="display:none;" onchange="onFileSelected(this)" required />
+              </div>
+            </div>
+
+            <!-- Department (free selection for admin) -->
+            <div>
+              <label class="f-label">Department</label>
+              <select name="department" class="f-input" required>
+                <option value="" disabled selected>Select department...</option>
+                <option value="All Departments">All Departments</option>
+                {% for d in all_depts %}
+                <option value="{{ d }}">{{ d }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Class -->
+            <div>
+              <label class="f-label">Class / Year</label>
+              <select name="class_name" class="f-input" required>
+                <option value="" disabled selected>Select...</option>
+                {% for c in class_choices %}
+                <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Semester -->
+            <div>
+              <label class="f-label">Semester</label>
+              <select name="semester" class="f-input" required>
+                <option value="" disabled selected>Select...</option>
+                {% for s in ['1st','2nd','3rd','4th','5th','6th'] %}
+                <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Subject Code -->
+            <div>
+              <label class="f-label">Subject Code</label>
+              <input type="text" name="subject_code" class="f-input" placeholder="e.g. U18CS501" required />
+            </div>
+
+            <!-- Exam Type -->
+            <div>
+              <label class="f-label">Exam Type</label>
+              <select name="exam_type" class="f-input" required>
+                <option value="" disabled selected>Select...</option>
+                <option value="Semester Exam">Semester Exam</option>
+                <option value="Model Exam">Model Exam</option>
+                <option value="Internal Exam (CIA)">Internal Exam (CIA)</option>
+              </select>
+            </div>
+
+            <!-- Subject Name -->
+            <div class="full">
+              <label class="f-label">Subject Name</label>
+              <input type="text" name="subject_name" class="f-input" placeholder="e.g. Data Structures and Algorithms" required />
+            </div>
+
+            <!-- Year -->
+            <div>
+              <label class="f-label">Year of Exam</label>
+              <select name="year" class="f-input" required>
+                <option value="" disabled selected>Select...</option>
+                {% for y in range(2031, 2018, -1) %}
+                <option value="{{ y }}">{{ y }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Submit -->
+            <div style="display:flex; align-items:flex-end;">
+              <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem;">
+                🚀 Publish Paper
+              </button>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+      <!-- Recent Papers -->
+      <div class="a-panel" style="margin-top:0;">
+        <div class="a-panel-hdr">
+          <h3 class="a-panel-title">📚 Recently Published</h3>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="a-table">
+            <thead><tr>
+              <th>Dept</th><th>Class</th><th>Sem</th><th>Code</th><th>Subject</th><th>Type</th><th>Year</th><th>Actions</th>
+            </tr></thead>
+            <tbody>
+              {% for p in recent_papers %}
+              <tr id="adm-prow-{{ p.id }}">
+                <td><span class="dept-badge">{{ p.department }}</span></td>
+                <td>{{ p.class_name or '—' }}</td>
+                <td>{{ p.semester }}</td>
+                <td style="color:#7dd3fc; font-weight:600;">{{ p.subject_code }}</td>
+                <td style="color:var(--hi); font-weight:500; max-width:170px;">{{ p.subject_name }}</td>
+                <td><span class="type-badge">{{ p.exam_type }}</span></td>
+                <td>{{ p.year }}</td>
+                <td>
+                  <div style="display:flex; gap:0.4rem; align-items:center;">
+                    <a href="/static/uploads/{{ p.filename }}" target="_blank" class="btn-preview">View</a>
+                    <a href="/admin/edit/{{ p.id }}" class="btn-preview" style="color:var(--accent); border-color:rgba(6,182,212,0.25);">Edit</a>
+                    <button class="btn-reject" onclick="deletePaperAdmin(this)" data-id="{{ p.id }}" data-label="{{ p.subject_code }} - {{ p.subject_name|escape }}">✕ Delete</button>
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--lo);">No papers yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────── DEPARTMENT PAPERS DIRECTORY ────────────── -->
+    <section class="a-section" id="section-dept-papers">
+      <h2 class="sec-title">Department-Wise Question Papers Directory</h2>
+      
+      <!-- Dept Summary Cards / Tabs -->
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:0.85rem; margin-bottom:1.8rem;">
+        {% for row in paper_dept_breakdown %}
+        <div onclick="filterAdminDeptPapers('{{ row.dept }}')" class="dept-filter-card" id="card-dept-{{ row.dept }}" style="background:rgba(15,20,40,0.85); border:1px solid rgba(56,189,248,0.18); border-radius:14px; padding:1.1rem; cursor:pointer; transition:all 0.25s; text-align:center; box-shadow:0 2px 12px rgba(0,0,0,0.3);">
+          <div style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:1.0rem; color:#38bdf8; margin-bottom:0.3rem; word-break:break-word;">{{ row.dept }}</div>
+          <div style="font-size:1.4rem; font-weight:800; color:#f1f5f9;">{{ row.approved }} <span style="font-size:0.72rem; color:#94a3b8; font-weight:600;">papers</span></div>
+          {% if row.pending > 0 %}
+          <div style="font-size:0.72rem; color:#ff9500; margin-top:0.3rem; font-weight:700;">⏳ {{ row.pending }} pending</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Department Papers Tables -->
+      <div class="a-panel" style="border-color:rgba(56,189,248,0.18);">
+        <div class="a-panel-hdr" style="background:var(--bg-panel); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+          <h3 class="a-panel-title">
+            🏛 <span id="activeDeptTitle">All Departments</span> Papers Catalog
+          </h3>
+          <div style="display:flex; gap:0.6rem; align-items:center;">
+            <input type="text" id="deptPaperSearchInput" class="search-in" placeholder="Search papers..." oninput="searchAdminDeptPapers()" style="max-width:200px;" />
+            <button onclick="filterAdminDeptPapers('ALL')" style="padding:0.4rem 0.8rem; border-radius:8px; background:var(--bg-panel); border:1px solid var(--border); color:var(--hi); font-size:0.78rem; font-weight:600; cursor:pointer;">Show All</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="a-table">
+            <thead><tr>
+              <th>Dept</th><th>Class</th><th>Sem</th><th>Code</th><th>Subject</th><th>Type</th><th>Year</th><th>Downloads</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="adminDeptPapersBody">
+              {% for dept_name, plist in dept_papers_map.items() %}
+                {% for p in plist %}
+                <tr id="adm-dept-prow-{{ p.id }}" class="adm-dept-paper-row" data-dept="{{ dept_name }}" data-search="{{ p.subject_code }} {{ p.subject_name }} {{ p.exam_type }} {{ p.year }}">
+                  <td><span class="dept-badge">{{ p.department }}</span></td>
+                  <td>{{ p.class_name or '—' }}</td>
+                  <td>{{ p.semester }}</td>
+                  <td style="color:#7dd3fc; font-weight:600;">{{ p.subject_code }}</td>
+                  <td style="color:var(--hi); font-weight:500; max-width:200px;">{{ p.subject_name }}</td>
+                  <td><span class="type-badge">{{ p.exam_type }}</span></td>
+                  <td>{{ p.year }}</td>
+                  <td><span style="display:inline-flex; align-items:center; gap:0.25rem; font-weight:700; color:#fde68a; background:var(--primary-glow); border:1px solid var(--border); padding:0.2rem 0.55rem; border-radius:12px; font-size:0.76rem;">🔥 {{ p.download_count or 0 }}</span></td>
+                  <td>
+                    <div style="display:flex; gap:0.4rem; align-items:center;">
+                      <a href="/static/uploads/{{ p.filename }}" target="_blank" class="btn-preview">View</a>
+                      <a href="/admin/edit/{{ p.id }}" class="btn-preview" style="color:var(--accent); border-color:rgba(6,182,212,0.25);">Edit</a>
+                      <button class="btn-reject" onclick="deletePaperAdmin(this)" data-id="{{ p.id }}" data-label="{{ p.subject_code }} - {{ p.subject_name|escape }}">✕ Delete</button>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────── MOST DOWNLOADED ────────────────────────── -->
+    <section class="a-section" id="section-most-downloaded">
+      <h2 class="sec-title">🔥 Most Downloaded Question Papers</h2>
+      <div class="a-panel" style="border-color:rgba(245,158,11,0.22);">
+        <div class="a-panel-hdr" style="background:var(--bg-panel);">
+          <h3 class="a-panel-title">
+            🏆 Top Leaderboard of Popular Papers
+            <span class="cnt gold">Top 12</span>
+          </h3>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="a-table">
+            <thead><tr>
+              <th>Rank</th><th>Dept</th><th>Class</th><th>Sem</th><th>Code</th><th>Subject Name</th><th>Type</th><th>Year</th><th>Downloads</th><th>Actions</th>
+            </tr></thead>
+            <tbody>
+              {% for p in most_downloaded_papers %}
+              <tr id="adm-top-prow-{{ p.id }}">
+                <td style="font-weight:800; font-size:1.05rem;">
+                  {% if loop.index == 1 %}🥇
+                  {% elif loop.index == 2 %}🥈
+                  {% elif loop.index == 3 %}🥉
+                  {% else %}<span style="color:#94a3b8; font-size:0.85rem;">#{{ loop.index }}</span>{% endif %}
+                </td>
+                <td><span class="dept-badge">{{ p.department }}</span></td>
+                <td>{{ p.class_name or '—' }}</td>
+                <td>{{ p.semester }}</td>
+                <td style="color:#7dd3fc; font-weight:600;">{{ p.subject_code }}</td>
+                <td style="color:var(--hi); font-weight:600; max-width:210px;">{{ p.subject_name }}</td>
+                <td><span class="type-badge">{{ p.exam_type }}</span></td>
+                <td>{{ p.year }}</td>
+                <td>
+                  <span style="display:inline-flex; align-items:center; gap:0.3rem; font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:0.9rem; color:#f59e0b; background:var(--primary-glow); border:1px solid var(--border); padding:0.3rem 0.75rem; border-radius:20px; box-shadow:0 0 15px var(--primary-glow);">
+                    🔥 {{ p.download_count or 0 }}
+                  </span>
+                </td>
+                <td>
+                  <div style="display:flex; gap:0.4rem; align-items:center;">
+                    <a href="/static/uploads/{{ p.filename }}" target="_blank" class="btn-preview">View</a>
+                    <a href="/admin/edit/{{ p.id }}" class="btn-preview" style="color:var(--accent); border-color:rgba(6,182,212,0.25);">Edit</a>
+                    <button class="btn-reject" onclick="deletePaperAdmin(this)" data-id="{{ p.id }}" data-label="{{ p.subject_code }} - {{ p.subject_name|escape }}">✕ Delete</button>
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="10" style="text-align:center; padding:2.5rem; color:var(--lo);">No download activity recorded yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- /a-wrap -->
+
+<!-- Logout Confirmation Modal -->
+<div id="logoutModal" style="display:none; position:fixed; inset:0; background:rgba(3,7,18,0.85); backdrop-filter:blur(10px); z-index:9999; align-items:center; justify-content:center; opacity:0; transition:opacity 0.25s ease;">
+  <div style="background:var(--bg-panel); border:1px solid var(--border); padding:2rem; border-radius:20px; max-width:400px; width:90%; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+    <div style="font-size:2.5rem; margin-bottom:1rem; color:#ff453a;">⎋</div>
+    <h3 style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:1.25rem; color:var(--hi); margin-bottom:0.5rem;">Confirm Logout</h3>
+    <p style="color:var(--mid); font-size:0.88rem; margin-bottom:1.5rem;">Are you sure you want to end your administration session?</p>
+    <div style="display:flex; gap:0.75rem; justify-content:center;">
+      <button onclick="closeLogoutModal()" style="flex:1; padding:0.6rem 1.2rem; border-radius:10px; font-size:0.85rem; font-weight:600; background:var(--bg-panel); border:1px solid var(--border); color:var(--mid); cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-panel)'">Cancel</button>
+      <a href="/logout" style="flex:1; padding:0.6rem 1.2rem; border-radius:10px; font-size:0.85rem; font-weight:600; background:linear-gradient(135deg, #ff453a, #ff9f0a); border:none; color:#fff; text-decoration:none; text-align:center; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">Yes, Logout</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── Sidebar navigation ── */
+  const sections = ['overview','students','officers','activity','upload','dept-papers','most-downloaded'];
+  function showSection(name) {
+    sections.forEach(s => {
+      document.getElementById(`section-${s}`).classList.toggle('visible', s === name);
+      const b = document.getElementById(`btn-${s}`);
+      if (b) b.classList.toggle('active', s === name);
+    });
+
+    // Auto-close sidebar on section selection in mobile view
+    const sidebar = document.querySelector('.a-sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar && sidebar.classList.contains('open')) {
+      sidebar.classList.remove('open');
+      if (overlay) overlay.style.display = 'none';
+    }
+  }
+
+  /* ── Drop zone ── */
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      document.getElementById('pdf_file').files = e.dataTransfer.files;
+      document.getElementById('dropLabel').textContent = '📎 ' + file.name;
+    }
+  }
+  function onFileSelected(input) {
+    if (input.files[0])
+      document.getElementById('dropLabel').textContent = '📎 ' + input.files[0].name;
+  }
+
+  /* ── Approve / Reject pending papers ── */
+  function moderateAdmin(elementOrId, action) {
+    let paperId = elementOrId;
+    if (typeof elementOrId === 'object' && elementOrId.getAttribute) {
+      paperId = elementOrId.getAttribute('data-id');
+      action = elementOrId.getAttribute('data-action');
+    }
+    if (!confirm(`${action === 'approve' ? 'Approve' : 'Reject'} this paper?`)) return;
+    fetch(`/moderator/${action}/${paperId}`, { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          const row = document.getElementById(`prow-${paperId}`);
+          if (row) {
+            row.style.transition = 'opacity 0.35s';
+            row.style.opacity = '0';
+            setTimeout(() => {
+              row.remove();
+              const badge = document.getElementById('allPendingCount');
+              badge.textContent = Math.max(0, parseInt(badge.textContent) - 1);
+            }, 380);
+          }
+        } else alert(data.error || 'Something went wrong.');
+      })
+      .catch(() => alert('Network error. Please try again.'));
+  }
+
+  /* ── Filter pending ── */
+  function filterPending(q) {
+    q = q.toLowerCase();
+    document.querySelectorAll('.pending-row').forEach(row => {
+      row.style.display = row.dataset.search.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+
+  /* ── Filter Department Papers ── */
+  let activeDeptFilter = 'ALL';
+  function filterAdminDeptPapers(dept) {
+    activeDeptFilter = dept;
+    document.getElementById('activeDeptTitle').textContent = dept === 'ALL' ? 'All Departments' : dept;
+    
+    // Highlight selected card
+    document.querySelectorAll('.dept-filter-card').forEach(card => {
+      card.style.borderColor = 'rgba(56,189,248,0.18)';
+      card.style.background = 'rgba(15,20,40,0.85)';
+      card.style.boxShadow = '0 2px 12px rgba(0,0,0,0.3)';
+    });
+    if (dept !== 'ALL') {
+      const activeCard = document.getElementById(`card-dept-${dept}`);
+      if (activeCard) {
+        activeCard.style.borderColor = '#38bdf8';
+        activeCard.style.background = 'rgba(56,189,248,0.12)';
+        activeCard.style.boxShadow = '0 0 18px rgba(56,189,248,0.25)';
+      }
+    }
+    
+    searchAdminDeptPapers();
+  }
+  
+  function searchAdminDeptPapers() {
+    const q = document.getElementById('deptPaperSearchInput').value.toLowerCase();
+    document.querySelectorAll('.adm-dept-paper-row').forEach(row => {
+      const rowDept = row.dataset.dept;
+      const matchesDept = (activeDeptFilter === 'ALL' || rowDept === activeDeptFilter);
+      const matchesSearch = row.dataset.search.toLowerCase().includes(q);
+      row.style.display = (matchesDept && matchesSearch) ? '' : 'none';
+    });
+  }
+
+  /* ── Delete Paper Admin ── */
+  function deletePaperAdmin(elementOrId, label) {
+    let paperId = elementOrId;
+    if (typeof elementOrId === 'object' && elementOrId.getAttribute) {
+      paperId = elementOrId.getAttribute('data-id');
+      label = elementOrId.getAttribute('data-label');
+    }
+    if (!confirm(`Are you sure you want to delete paper: ${label}?`)) return;
+    fetch(`/admin/delete/${paperId}`, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': '{{ csrf_token() }}'
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        ['adm-prow-', 'adm-dept-prow-', 'adm-top-prow-'].forEach(prefix => {
+          const el = document.getElementById(prefix + paperId);
+          if (el) {
+            el.style.transition = 'opacity 0.35s';
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 380);
+          }
+        });
+      } else {
+        alert(data.error || 'Failed to delete paper.');
+      }
+    })
+    .catch(() => alert('Network error. Please try again.'));
+  }
+
+  /* ── Logout Modal ── */
+  function openLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    modal.style.display = 'flex';
+    setTimeout(() => { modal.style.opacity = '1'; }, 10);
+  }
+  function closeLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    modal.style.opacity = '0';
+    setTimeout(() => { modal.style.display = 'none'; }, 250);
+  }
+
+  /* ── Mobile Sidebar Drawer Toggle ── */
+  function toggleAdminSidebar() {
+    const sidebar = document.querySelector('.a-sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar && overlay) {
+      if (sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        overlay.style.display = 'none';
+      } else {
+        sidebar.classList.add('open');
+        overlay.style.display = 'block';
+      }
+    }
+  }
+
+  /* ── Auto-open section from hash ── */
+  const hash = window.location.hash.replace('#','');
+  if (sections.includes(hash)) showSection(hash);
+
+  // Prevent back button from exiting dashboard without confirmation
+  (function() {
+    window.history.pushState({ noBackExits: true }, "", window.location.href);
+    window.addEventListener('popstate', function(event) {
+      window.history.pushState({ noBackExits: true }, "", window.location.href);
+      openLogoutModal();
+    });
+  })();
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Apply dynamic width
+    document.querySelectorAll('.dept-bar-fill').forEach(el => {
+      const w = el.getAttribute('data-width');
+      if (w !== null) el.style.width = w + '%';
+    });
+    // Apply avatar styles
+    document.querySelectorAll('.av').forEach(el => {
+      const color = el.getAttribute('data-color');
+      if (color) {
+        el.style.background = color + '20';
+        el.style.color = color;
+        el.style.border = `1px solid ${color}40`;
+      }
+    });
+  });
+</script>
+{% endblock %}
+
+{% block footer %}{% endblock %}

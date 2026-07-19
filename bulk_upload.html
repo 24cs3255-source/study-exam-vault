@@ -1,0 +1,721 @@
+{% extends "base.html" %}
+{% block title %}Bulk Upload Papers{% endblock %}
+
+{% block content %}
+<div style="min-height:100vh; padding:7rem 1.5rem 10rem; max-width:1200px; margin:0 auto;">
+
+  <!-- Header -->
+  <div style="display:flex; align-items:center; gap:1rem; margin-bottom:2.5rem; flex-wrap:wrap;">
+    <a href="/admin" class="btn-outline-blue" style="padding:.45rem .9rem; font-size:.82rem; border-radius:8px;">← Back to Dashboard</a>
+    <h1 style="font-family:'Plus Jakarta Sans',sans-serif; font-size:2rem; font-weight:800; background:linear-gradient(135deg, var(--apple-blue), var(--apple-purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:-0.02em;">
+      Bulk Upload Question Papers
+    </h1>
+  </div>
+
+  <!-- CSRF Token (read by JS) -->
+  <input type="hidden" id="csrfToken" value="{{ csrf_token() }}"/>
+
+  <!-- Step 1: Drop Zone -->
+  <div class="glass-card" style="padding:2.5rem 2rem; border-radius:24px; margin-bottom:2rem; text-align:center;">
+    <div id="dropZone" style="border:2px dashed rgba(0,122,255,.3); border-radius:16px; padding:3.5rem 1.5rem; cursor:pointer; transition:all .3s ease;"
+         onclick="document.getElementById('bulkFilesInput').click()"
+         ondragover="event.preventDefault(); this.style.borderColor='var(--apple-blue)'; this.style.background='rgba(0,122,255,.04)';"
+         ondragleave="this.style.borderColor='rgba(0,122,255,.3)'; this.style.background='';"
+         ondrop="handleDrop(event)">
+      <div style="font-size:3.5rem; margin-bottom:1rem; animation: pulse 2s infinite ease-in-out;">📚</div>
+      <p style="color:var(--text-bright); font-size:1.1rem; font-family:'Plus Jakarta Sans',sans-serif; font-weight:600;" id="dropZoneLabel">
+        Drag &amp; Drop multiple PDF files here, or click to browse
+      </p>
+      <p style="color:var(--text-dim); font-size:0.85rem; margin-top:0.4rem;">
+        Only PDF files are allowed. Max 50 MB per file.
+      </p>
+      <div style="margin-top:1.25rem; display:inline-flex; align-items:center; gap:0.4rem; padding:0.4rem 0.8rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:8px;">
+        <span style="font-size:0.85rem;">💡</span>
+        <span style="color:var(--text-mid); font-size:0.75rem; text-align:left;">
+          <strong>Pro-Tip:</strong> Name files like <code>CODE_Subject Name.pdf</code> (e.g., <code>U18CS501_Java Programming.pdf</code>) to autofill fields!
+        </span>
+      </div>
+      <input type="file" id="bulkFilesInput" accept=".pdf" multiple style="display:none;" onchange="handleFilesSelected(this.files)"/>
+    </div>
+  </div>
+
+  <!-- Step 2: Queue Management (Hidden initially until files are queued) -->
+  <div id="queueSection" style="display:none;" class="fade-in">
+
+    <!-- Bulk Settings Bar -->
+    <div class="glass-card" style="padding:1.5rem 1.5rem; border-radius:18px; margin-bottom:1.5rem;">
+      <h3 style="font-family:'Plus Jakarta Sans',sans-serif; font-size:0.95rem; font-weight:700; color:var(--text-bright); margin-bottom:1rem; display:flex; align-items:center; gap:0.4rem;">
+        <span>⚡</span> Bulk Apply Metadata (Optional)
+      </h3>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:0.85rem; align-items:end;">
+        <div>
+          <label class="field-label">Department / Course</label>
+          <input type="text" id="bulkDept" class="glass-input" placeholder="e.g. B.Sc Computer Science" list="dept-list-bulk"/>
+          <datalist id="dept-list-bulk">
+            {% for d in [
+              'B.Sc Computer Science', 'BCA', 'B.Sc Information Technology',
+              'B.Sc Mathematics', 'B.Sc Physics', 'B.Sc Chemistry',
+              'B.Com General', 'B.Com Computer Applications', 'B.Com Professional Accounting',
+              'BBA', 'B.A English Literature', 'B.A Tamil Literature', 'B.A Economics',
+              'M.Sc Computer Science', 'MCA', 'M.Com', 'M.A English'
+            ] %}
+            <option value="{{ d }}">
+            {% endfor %}
+          </datalist>
+        </div>
+        <div>
+          <label class="field-label">Class / Year</label>
+          <select id="bulkClass" class="glass-input">
+            <option value="">Select year</option>
+            {% for c in class_choices %}
+            <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Semester</label>
+          <select id="bulkSemester" class="glass-input">
+            <option value="">Select sem</option>
+            {% for s in ['1st','2nd','3rd','4th','5th','6th'] %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Exam Type</label>
+          <select id="bulkExamType" class="glass-input">
+            <option value="">Select type</option>
+            <option value="Semester Exam">Semester Exam</option>
+            <option value="Model Exam">Model Exam</option>
+            <option value="Internal Exam (CIA)">Internal Exam (CIA)</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Year of Exam</label>
+          <select id="bulkYear" class="glass-input">
+            <option value="">Select year</option>
+            {% for y in range(2031, 2019, -1) %}
+            <option value="{{ y }}">{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <button type="button" onclick="applyBulkMetadata()" class="btn-solid-blue" style="width:100%; justify-content:center; padding:0.6rem; font-size:0.8rem; border-radius:10px; height:37px;">
+            Apply to All Rows
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overall Progress Area -->
+    <div id="overallProgressBox" class="glass-card" style="padding:1.25rem 1.5rem; border-radius:18px; margin-bottom:1.5rem; display:none; background:rgba(0,122,255,0.02); border-color:rgba(0,122,255,0.15);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+        <span style="font-family:'Plus Jakarta Sans',sans-serif; font-size:0.9rem; font-weight:700; color:var(--text-bright);" id="overallStatusText">
+          Uploading papers...
+        </span>
+        <span style="font-size:0.85rem; font-weight:600; color:var(--apple-blue);" id="overallPercentText">
+          0%
+        </span>
+      </div>
+      <div style="width:100%; height:6px; background:rgba(255,255,255,0.06); border-radius:10px; overflow:hidden;">
+        <div id="overallProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg, var(--apple-blue), var(--apple-purple)); transition:width 0.25s;"></div>
+      </div>
+    </div>
+
+    <!-- Files Table -->
+    <div class="glass-card" style="border-radius:20px; overflow:hidden; padding:0; margin-bottom:2rem;">
+      <div style="padding:1.2rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+        <h2 style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.1rem; font-weight:700; color:var(--text-bright);">
+          Upload Queue (<span id="queueCount">0</span> files)
+        </h2>
+        <button type="button" onclick="clearQueue()" class="btn-danger" style="padding:0.4rem 1rem; font-size:0.75rem;">
+          Clear Queue
+        </button>
+      </div>
+      
+      <div style="overflow-x:auto;">
+        <table class="bulk-table" style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="width:20%;">File Details</th>
+              <th style="width:12%;">Subject Code</th>
+              <th style="width:18%;">Subject Name</th>
+              <th style="width:18%;">Department</th>
+              <th style="width:9%;">Class</th>
+              <th style="width:8%;">Sem</th>
+              <th style="width:10%;">Exam Type</th>
+              <th style="width:8%;">Year</th>
+              <th style="width:8%;">Status</th>
+              <th style="width:5%;"></th>
+            </tr>
+          </thead>
+          <tbody id="queueTableBody">
+            <!-- Row template inserted dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Final Action Button -->
+    <div style="text-align:right;">
+      <button id="startUploadBtn" type="button" onclick="startBulkUpload()" class="btn-primary" style="padding:0.85rem 2.5rem; font-size:1rem; border-radius:14px; box-shadow: 0 10px 25px rgba(0, 122, 255, 0.25);">
+        🚀 Start Uploading All
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Styles -->
+<style>
+.field-label {
+  display:block; font-size:.68rem; font-weight:600;
+  color:var(--apple-blue); letter-spacing:.06em;
+  text-transform:uppercase; margin-bottom:.35rem;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.bulk-table th {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.bulk-table td {
+  padding: 0.85rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-mid);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  vertical-align: middle;
+}
+.bulk-table tr:hover {
+  background: rgba(255, 255, 255, 0.01);
+}
+.bulk-table .glass-input {
+  padding: 0.45rem 0.65rem;
+  font-size: 0.8rem;
+  border-radius: 8px;
+}
+.bulk-table select.glass-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='rgba(255,255,255,0.4)'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  padding-right: 1.4rem;
+}
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+.status-pending { background: rgba(255, 255, 255, 0.05); color: var(--text-dim); }
+.status-uploading { background: rgba(0, 122, 255, 0.1); color: var(--apple-blue); }
+.status-success { background: rgba(48, 209, 88, 0.12); color: #30d158; }
+.status-failed { background: rgba(255, 69, 58, 0.12); color: #ff453a; }
+
+.remove-row-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: color 0.15s;
+  padding: 0.2rem 0.4rem;
+  line-height: 1;
+}
+.remove-row-btn:hover {
+  color: #ff453a;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Queue of files to be uploaded
+let uploadQueue = [];
+let isUploading = false;
+
+// Triggered when multiple files are dragged & dropped
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').style.background = '';
+  document.getElementById('dropZone').style.borderColor = 'rgba(0,122,255,.3)';
+  
+  if (e.dataTransfer.files) {
+    handleFilesSelected(e.dataTransfer.files);
+  }
+}
+
+// Handle selected file list
+function handleFilesSelected(files) {
+  const allowedExts = ['pdf'];
+  const newItems = [];
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const ext = file.name.split('.').pop().toLowerCase();
+    
+    if (allowedExts.includes(ext)) {
+      // Auto-parse filename to get Subject Code and Subject Name
+      // Pattern: CODE_Subject Name.pdf or CODE - Subject Name.pdf
+      let parsedCode = '';
+      let parsedName = '';
+      const baseName = file.name.substring(0, file.name.lastIndexOf('.'));
+      
+      // Match pattern like CS3352_Data Science or CS301-Java or CS301 Java
+      const match = baseName.match(/^([A-Za-z0-9]+)[\s_\-]+(.+)$/);
+      if (match) {
+        parsedCode = match[1].trim().toUpperCase();
+        parsedName = match[2].replace(/[\-_]/g, ' ').trim();
+      } else {
+        // Fallback: If no delimiter, put the whole name in Subject Name
+        parsedName = baseName.replace(/[\-_]/g, ' ').trim();
+      }
+
+      // Generate unique ID for queue item
+      const id = 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      
+      const item = {
+        id: id,
+        file: file,
+        subjectCode: parsedCode,
+        subjectName: parsedName,
+        department: '',
+        className: '',
+        semester: '',
+        examType: '',
+        year: '',
+        status: 'parsing', // starts in parsing status
+        progress: 0,
+        errorMessage: ''
+      };
+      
+      uploadQueue.push(item);
+      newItems.push(item);
+    }
+  }
+
+  if (newItems.length > 0) {
+    renderQueueTable();
+    document.getElementById('queueSection').style.display = 'block';
+    
+    // Clear standard file input
+    document.getElementById('bulkFilesInput').value = '';
+
+    // Async trigger pdf parsing endpoint
+    newItems.forEach(item => {
+      parsePDFMetadataAJAX(item);
+    });
+  }
+}
+
+// AJAX request to backend /parse-pdf
+async function parsePDFMetadataAJAX(item) {
+  const csrfToken = document.getElementById('csrfToken').value;
+  const formData = new FormData();
+  formData.append('pdf_file', item.file);
+  formData.append('csrf_token', csrfToken);
+
+  try {
+    const res = await fetch('/admin/parse-pdf', {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+    const data = await res.json();
+    
+    if (data.success && data.metadata) {
+      const meta = data.metadata;
+      if (meta.subject_code) item.subjectCode = meta.subject_code;
+      if (meta.subject_name) item.subjectName = meta.subject_name;
+      if (meta.department) item.department = meta.department;
+      if (meta.class_name) item.className = meta.class_name;
+      if (meta.semester) item.semester = meta.semester;
+      if (meta.exam_type) item.examType = meta.exam_type;
+      if (meta.year) item.year = meta.year;
+    }
+  } catch (e) {
+    console.error("PDF Parsing failed, falling back to parsed filename: ", e);
+  } finally {
+    item.status = 'pending';
+    updateRowInputs(item);
+  }
+}
+
+// Update row input values and status in real-time
+function updateRowInputs(item) {
+  const tr = document.getElementById(item.id);
+  if (!tr) return;
+
+  const codeInput = tr.querySelector('.item-code');
+  const nameInput = tr.querySelector('.item-name');
+  const deptInput = tr.querySelector('.item-dept');
+  const classSelect = tr.querySelector('.item-class');
+  const semSelect = tr.querySelector('.item-sem');
+  const examSelect = tr.querySelector('.item-exam');
+  const yearSelect = tr.querySelector('.item-year');
+  const statusTd = document.getElementById(`status-${item.id}`);
+
+  if (codeInput) codeInput.value = item.subjectCode;
+  if (nameInput) nameInput.value = item.subjectName;
+  if (deptInput) deptInput.value = item.department;
+  if (classSelect) classSelect.value = item.className;
+  if (semSelect) semSelect.value = item.semester;
+  if (examSelect) examSelect.value = item.examType;
+  if (yearSelect) yearSelect.value = item.year;
+
+  if (statusTd) {
+    statusTd.innerHTML = `<span class="status-badge status-pending">⏳ Pending</span>`;
+  }
+}
+
+// Render the queue table dynamically
+function renderQueueTable() {
+  const tbody = document.getElementById('queueTableBody');
+  tbody.innerHTML = '';
+
+  document.getElementById('queueCount').textContent = uploadQueue.length;
+
+  uploadQueue.forEach((item, index) => {
+    const tr = document.createElement('tr');
+    tr.id = item.id;
+    
+    // Status column display
+    let statusHtml = '';
+    if (item.status === 'pending') {
+      statusHtml = `<span class="status-badge status-pending">⏳ Pending</span>`;
+    } else if (item.status === 'parsing') {
+      statusHtml = `<span class="status-badge status-uploading" style="background: rgba(175, 82, 222, 0.1); color: var(--apple-purple);">🔍 Parsing PDF...</span>`;
+    } else if (item.status === 'uploading') {
+      statusHtml = `<span class="status-badge status-uploading">🔄 ${item.progress}%</span>`;
+    } else if (item.status === 'success') {
+      statusHtml = `<span class="status-badge status-success">✅ Done</span>`;
+    } else {
+      statusHtml = `<span class="status-badge status-failed" title="${item.errorMessage}">❌ Failed</span>`;
+    }
+
+    // Format bytes
+    const sizeStr = (item.file.size / (1024 * 1024)).toFixed(2) + ' MB';
+
+    tr.innerHTML = `
+      <td style="word-break:break-all;">
+        <div style="font-weight:600; color:var(--text-bright); font-size:0.82rem;">${item.file.name}</div>
+        <div style="font-size:0.72rem; color:var(--text-dim); margin-top:0.15rem;">${sizeStr}</div>
+      </td>
+      <td>
+        <input type="text" class="glass-input item-code" value="${item.subjectCode}" placeholder="U18CS501" 
+               oninput="updateItemField('${item.id}', 'subjectCode', this.value)" required ${isUploading ? 'disabled' : ''} />
+      </td>
+      <td>
+        <input type="text" class="glass-input item-name" value="${item.subjectName}" placeholder="e.g. Java Programming" 
+               oninput="updateItemField('${item.id}', 'subjectName', this.value)" required ${isUploading ? 'disabled' : ''} />
+      </td>
+      <td>
+        <input type="text" class="glass-input item-dept" value="${item.department}" placeholder="e.g. B.Sc Computer Science" list="dept-list-${item.id}"
+               oninput="updateItemField('${item.id}', 'department', this.value)" required ${isUploading ? 'disabled' : ''} />
+        <datalist id="dept-list-${item.id}">
+          <option value="B.Sc Computer Science">
+          <option value="BCA">
+          <option value="B.Sc Information Technology">
+          <option value="B.Sc Mathematics">
+          <option value="B.Sc Physics">
+          <option value="B.Sc Chemistry">
+          <option value="B.Com General">
+          <option value="B.Com Computer Applications">
+          <option value="B.Com Professional Accounting">
+          <option value="BBA">
+          <option value="B.A English Literature">
+          <option value="B.A Tamil Literature">
+          <option value="B.A Economics">
+          <option value="M.Sc Computer Science">
+          <option value="MCA">
+          <option value="M.Com">
+          <option value="M.A English">
+        </datalist>
+      </td>
+      <td>
+        <select class="glass-input item-class" onchange="updateItemField('${item.id}', 'className', this.value)" required ${isUploading ? 'disabled' : ''}>
+          <option value="">Select</option>
+          <option value="I-year" ${item.className === 'I-year' ? 'selected' : ''}>I-year</option>
+          <option value="II-year" ${item.className === 'II-year' ? 'selected' : ''}>II-year</option>
+          <option value="III-year" ${item.className === 'III-year' ? 'selected' : ''}>III-year</option>
+        </select>
+      </td>
+      <td>
+        <select class="glass-input item-sem" onchange="updateItemField('${item.id}', 'semester', this.value)" required ${isUploading ? 'disabled' : ''}>
+          <option value="">Select</option>
+          <option value="1st" ${item.semester === '1st' ? 'selected' : ''}>1st</option>
+          <option value="2nd" ${item.semester === '2nd' ? 'selected' : ''}>2nd</option>
+          <option value="3rd" ${item.semester === '3rd' ? 'selected' : ''}>3rd</option>
+          <option value="4th" ${item.semester === '4th' ? 'selected' : ''}>4th</option>
+          <option value="5th" ${item.semester === '5th' ? 'selected' : ''}>5th</option>
+          <option value="6th" ${item.semester === '6th' ? 'selected' : ''}>6th</option>
+        </select>
+      </td>
+      <td>
+        <select class="glass-input item-exam" onchange="updateItemField('${item.id}', 'examType', this.value)" required ${isUploading ? 'disabled' : ''}>
+          <option value="">Select</option>
+          <option value="Semester Exam" ${item.examType === 'Semester Exam' ? 'selected' : ''}>Semester Exam</option>
+          <option value="Model Exam" ${item.examType === 'Model Exam' ? 'selected' : ''}>Model Exam</option>
+          <option value="Internal Exam (CIA)" ${item.examType === 'Internal Exam (CIA)' ? 'selected' : ''}>Internal Exam (CIA)</option>
+        </select>
+      </td>
+      <td>
+        <select class="glass-input item-year" onchange="updateItemField('${item.id}', 'year', this.value)" required ${isUploading ? 'disabled' : ''}>
+          <option value="">Select</option>
+          ${[2030, 2029, 2028, 2027, 2026, 2025, 2024, 2023, 2022, 2021, 2020].map(y => `
+            <option value="${y}" ${item.year == y ? 'selected' : ''}>${y}</option>
+          `).join('')}
+        </select>
+      </td>
+      <td id="status-${item.id}">${statusHtml}</td>
+      <td>
+        <button type="button" class="remove-row-btn" onclick="removeFromQueue('${item.id}')" ${isUploading ? 'disabled' : ''}>✕</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Update specific field inside upload queue item structure
+function updateItemField(itemId, field, value) {
+  const item = uploadQueue.find(i => i.id === itemId);
+  if (item) {
+    item[field] = value;
+  }
+}
+
+// Apply bulk metadata fields to all rows
+function applyBulkMetadata() {
+  const bDept = document.getElementById('bulkDept').value.trim();
+  const bClass = document.getElementById('bulkClass').value;
+  const bSem = document.getElementById('bulkSemester').value;
+  const bExam = document.getElementById('bulkExamType').value;
+  const bYear = document.getElementById('bulkYear').value;
+
+  uploadQueue.forEach(item => {
+    if (item.status === 'pending') {
+      if (bDept) item.department = bDept;
+      if (bClass) item.className = bClass;
+      if (bSem) item.semester = bSem;
+      if (bExam) item.examType = bExam;
+      if (bYear) item.year = bYear;
+    }
+  });
+
+  renderQueueTable();
+}
+
+// Remove single file row from upload list
+function removeFromQueue(itemId) {
+  uploadQueue = uploadQueue.filter(i => i.id !== itemId);
+  renderQueueTable();
+  if (uploadQueue.length === 0) {
+    document.getElementById('queueSection').style.display = 'none';
+  }
+}
+
+// Clear all files
+function clearQueue() {
+  uploadQueue = [];
+  document.getElementById('queueSection').style.display = 'none';
+}
+
+// Start AJAX upload pipeline
+async function startBulkUpload() {
+  if (isUploading) return;
+  
+  // 1. Validation check
+  let hasErrors = false;
+  uploadQueue.forEach(item => {
+    if (item.status !== 'success') {
+      if (!item.subjectCode || !item.subjectName || !item.department || !item.className || !item.semester || !item.examType || !item.year) {
+        hasErrors = true;
+      }
+    }
+  });
+
+  if (hasErrors) {
+    alert("Please fill all required fields for each question paper in the queue!");
+    return;
+  }
+
+  isUploading = true;
+  document.getElementById('startUploadBtn').disabled = true;
+  document.getElementById('startUploadBtn').textContent = 'Uploading...';
+  
+  // Disable remove buttons
+  document.querySelectorAll('.remove-row-btn').forEach(btn => btn.disabled = true);
+  
+  // Show overall progress indicator
+  document.getElementById('overallProgressBox').style.display = 'block';
+  updateOverallProgress();
+
+  const csrfToken = document.getElementById('csrfToken').value;
+
+  // 2. Sequential upload execution
+  for (let i = 0; i < uploadQueue.length; i++) {
+    const item = uploadQueue[i];
+    if (item.status === 'success') continue; // Skip already uploaded files
+
+    item.status = 'uploading';
+    item.progress = 10;
+    renderItemStatus(item);
+    updateOverallProgress();
+
+    try {
+      const success = await uploadSingleFileAJAX(item, csrfToken);
+      if (success) {
+        item.status = 'success';
+        item.progress = 100;
+      } else {
+        item.status = 'failed';
+      }
+    } catch (e) {
+      item.status = 'failed';
+      item.errorMessage = e.message || 'Unknown network error';
+    }
+
+    renderItemStatus(item);
+    updateOverallProgress();
+  }
+
+  isUploading = false;
+  document.getElementById('startUploadBtn').disabled = false;
+  document.getElementById('startUploadBtn').textContent = '🚀 Start Uploading All';
+  
+  // Re-enable removal if not fully complete, or show complete state
+  const successfulCount = uploadQueue.filter(item => item.status === 'success').length;
+  if (successfulCount === uploadQueue.length) {
+    document.getElementById('overallStatusText').textContent = '🎉 All papers uploaded successfully!';
+    setTimeout(() => {
+      window.location.href = '/admin';
+    }, 1500);
+  } else {
+    document.getElementById('overallStatusText').textContent = `Upload finished. ${successfulCount} of ${uploadQueue.length} files succeeded.`;
+    document.querySelectorAll('.remove-row-btn').forEach(btn => btn.disabled = false);
+  }
+}
+
+// Upload a single file using XMLHttpRequest to track individual progress
+function uploadSingleFileAJAX(item, csrfToken) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/admin/upload-ajax', true);
+    
+    // Track file upload progress
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable) {
+        const percentComplete = Math.round((e.loaded / e.total) * 90); // Cap upload percent to 90% (saving/db commit takes the rest)
+        item.progress = percentComplete;
+        renderItemStatus(item);
+      }
+    };
+
+    xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          if (res.success) {
+            resolve(true);
+          } else {
+            item.errorMessage = res.error || 'Server rejected upload';
+            resolve(false);
+          }
+        } catch (e) {
+          item.errorMessage = 'Invalid server response';
+          resolve(false);
+        }
+      } else {
+        try {
+          const res = JSON.parse(xhr.responseText);
+          item.errorMessage = res.error || `HTTP Error ${xhr.status}`;
+        } catch (e) {
+          item.errorMessage = `HTTP Error ${xhr.status}`;
+        }
+        resolve(false);
+      }
+    };
+
+    xhr.onerror = function() {
+      item.errorMessage = 'Network connection failed';
+      resolve(false);
+    };
+
+    // Prepare FormData
+    const formData = new FormData();
+    formData.append('pdf_file', item.file);
+    formData.append('csrf_token', csrfToken);
+    formData.append('department', item.department);
+    formData.append('class_name', item.className);
+    formData.append('semester', item.semester);
+    formData.append('exam_type', item.examType);
+    formData.append('subject_code', item.subjectCode);
+    formData.append('subject_name', item.subjectName);
+    formData.append('year', item.year);
+
+    xhr.send(formData);
+  });
+}
+
+// Render status of an item in the queue table
+function renderItemStatus(item) {
+  const statusTd = document.getElementById(`status-${item.id}`);
+  if (!statusTd) return;
+
+  if (item.status === 'pending') {
+    statusTd.innerHTML = `<span class="status-badge status-pending">⏳ Pending</span>`;
+  } else if (item.status === 'uploading') {
+    statusTd.innerHTML = `<span class="status-badge status-uploading">🔄 ${item.progress}%</span>`;
+  } else if (item.status === 'success') {
+    statusTd.innerHTML = `<span class="status-badge status-success">✅ Done</span>`;
+  } else {
+    statusTd.innerHTML = `<span class="status-badge status-failed" title="${item.errorMessage}">❌ Failed</span>`;
+  }
+}
+
+// Update overall progress bar values
+function updateOverallProgress() {
+  if (uploadQueue.length === 0) return;
+
+  const total = uploadQueue.length;
+  const completed = uploadQueue.filter(item => item.status === 'success').length;
+  const failed = uploadQueue.filter(item => item.status === 'failed').length;
+  const inProgress = uploadQueue.filter(item => item.status === 'uploading').length;
+
+  let overallPercent = Math.round((completed / total) * 100);
+  
+  // Add micro-progress for uploading row
+  if (inProgress > 0) {
+    const currentUploadingItem = uploadQueue.find(item => item.status === 'uploading');
+    if (currentUploadingItem) {
+      overallPercent += Math.round((currentUploadingItem.progress / 100) * (100 / total));
+    }
+  }
+
+  overallPercent = Math.min(overallPercent, 100);
+
+  document.getElementById('overallPercentText').textContent = overallPercent + '%';
+  document.getElementById('overallProgressBar').style.width = overallPercent + '%';
+  
+  if (completed + failed === total) {
+    document.getElementById('overallStatusText').textContent = `Upload complete. ${completed} succeeded, ${failed} failed.`;
+  } else {
+    document.getElementById('overallStatusText').textContent = `Uploading paper ${completed + 1} of ${total}...`;
+  }
+}
+</script>
+{% endblock %}

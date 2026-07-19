@@ -1,0 +1,2450 @@
+{% extends "base.html" %}
+{% block title %}EXAM-STUDY-VAULT — Search Here{% endblock %}
+
+{% block content %}<style>
+  /* Theme variables mapped to page wrapper */
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    --text-bright: var(--text-hi);
+    --text-mid: var(--text-mid);
+    --text-dim: var(--text-lo);
+  }
+
+  /* Hero */
+  .hero {
+    min-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 7rem 1.5rem 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-watermark {
+    position: absolute;
+    left: -6%;
+    top: 5%;
+    opacity: 0.02;
+    pointer-events: none;
+    user-select: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 34vw;
+    font-weight: 800;
+    color: #fff;
+    line-height: 0.8;
+    letter-spacing: -0.05em;
+  }
+
+  .hero-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+    animation: fadeSlideUp 0.6s ease both;
+  }
+
+  .hero-eyebrow-line {
+    width: 32px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--apple-blue));
+  }
+
+  .hero-eyebrow-line.right {
+    background: linear-gradient(90deg, var(--apple-blue), transparent);
+  }
+
+  .hero-eyebrow span {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--apple-blue);
+  }
+
+  .hero-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(2.8rem, 7.5vw, 6.2rem);
+    font-weight: 800;
+    line-height: 1.05;
+    text-align: center;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    animation: fadeSlideUp 0.6s 0.1s ease both;
+  }
+
+  .hero-title .line-1 {
+    display: block;
+    color: var(--text-bright);
+  }
+
+  .hero-title .line-2 {
+    display: block;
+    background: linear-gradient(135deg, var(--apple-blue) 0%, var(--apple-purple) 60%, #ff2d55 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 30px rgba(0, 122, 255, 0.25));
+  }
+
+  .hero-sub {
+    font-size: 1.05rem;
+    color: var(--text-mid);
+    max-width: 520px;
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 3.5rem;
+    animation: fadeSlideUp 0.6s 0.2s ease both;
+  }
+
+  /* Search card */
+  .search-card {
+    width: 100%;
+    max-width: 720px;
+    position: relative;
+    animation: fadeSlideUp 0.7s 0.3s ease both;
+  }
+
+  /* Clear button */
+  .clear-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-mid);
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+    z-index: 2;
+  }
+
+  .clear-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-bright);
+    transform: rotate(90deg);
+  }
+
+  .card-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+    color: var(--text-bright);
+    margin-bottom: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 18px;
+    background: linear-gradient(to bottom, var(--apple-blue), var(--apple-purple));
+    border-radius: 2px;
+  }
+
+  /* Search input */
+  .search-bar-wrap {
+    position: relative;
+    margin-bottom: 1.2rem;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 1.1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--apple-blue);
+    font-size: 0.95rem;
+    pointer-events: none;
+  }
+
+  .qh-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    color: var(--text-bright);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.92rem;
+    padding: 0.75rem 1rem 0.75rem 2.8rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+  }
+
+  select.qh-input {
+    padding-left: 1rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.4)'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.95rem center;
+    padding-right: 2.2rem;
+    cursor: pointer;
+  }
+
+  .qh-input::placeholder {
+    color: var(--text-dim);
+  }
+
+  .qh-input:focus {
+    border-color: var(--apple-blue);
+    background-color: rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+  }
+
+  .qh-input option {
+    background: #0c101b;
+    color: #fff;
+  }
+
+  /* Filter label */
+  .filter-label {
+    display: block;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    margin-bottom: 0.45rem;
+  }
+
+  /* Filter grid */
+  .filter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .search-input-wrap {
+    margin-bottom: 1rem;
+  }
+
+  /* Year pills */
+  .year-pills-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .year-pills-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .year-pill {
+    flex-shrink: 0;
+    padding: 0.5rem 1.2rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+    white-space: nowrap;
+  }
+
+  .year-pill:hover {
+    color: var(--text-bright);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+  }
+
+  .year-pill.active {
+    background: linear-gradient(135deg, var(--apple-blue), var(--apple-purple));
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+  }
+
+  /* Search button */
+  .search-btn {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: linear-gradient(135deg, var(--apple-blue) 0%, var(--apple-purple) 100%);
+    border: none;
+    cursor: pointer;
+    border-radius: 9999px;
+    box-shadow: 0 4px 14px rgba(0, 122, 255, 0.3);
+    transition: transform 0.15s, filter 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .search-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1);
+    box-shadow: 0 6px 18px rgba(0, 122, 255, 0.4);
+  }
+
+  .search-btn:active {
+    transform: translateY(0);
+  }
+
+  .result-count {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-top: 1.2rem;
+    display: none;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .result-count span {
+    color: var(--apple-blue);
+    font-weight: 600;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 3rem;
+    padding-top: 2.2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    animation: fadeSlideUp 0.7s 0.5s ease both;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-bright);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .stat-num em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--apple-blue), var(--apple-purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.3rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 500;
+  }
+
+  /* Results section */
+  .results-section {
+    padding: 0 1.5rem 8rem;
+    max-width: 1240px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2.2rem;
+  }
+
+  .section-header-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent);
+  }
+
+  .section-header-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--apple-blue);
+  }
+
+  /* Loading */
+  .loading-state {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 5rem 0;
+  }
+
+  /* Empty state */
+  .empty-state {
+    display: none;
+    text-align: center;
+    padding: 5rem 0;
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1.2rem;
+    opacity: 0.7;
+  }
+
+  .empty-state p {
+    color: var(--text-mid);
+    font-size: 0.95rem;
+  }
+
+  .empty-state p+p {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-top: 0.4rem;
+  }
+
+  /* Papers grid */
+  .papers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* Paper card */
+  .paper-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    padding: 1.5rem;
+    position: relative;
+    will-change: transform, opacity;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+    opacity: 0;
+    animation: cardReveal 0.4s ease forwards;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .paper-card:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
+    border-top-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  @keyframes cardReveal {
+    from {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .card-subject {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-bright);
+    line-height: 1.35;
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.01em;
+  }
+
+  .card-code {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--apple-blue);
+    margin-bottom: 0.3rem;
+  }
+
+  .card-meta {
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    margin-bottom: 1.2rem;
+  }
+
+  .card-date {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+  }
+
+  /* Bookmarks styling */
+  .card-bookmark-btn {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.35rem;
+    cursor: pointer;
+    transition: color 0.2s, transform 0.2s;
+    line-height: 1;
+    z-index: 10;
+    padding: 0.2rem;
+  }
+
+  .card-bookmark-btn:hover {
+    transform: scale(1.2);
+    color: #ffcc00;
+  }
+
+  .card-bookmark-btn.active {
+    color: #ffcc00;
+    text-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
+  }
+
+  /* Glassmorphic Toast Notifications */
+  .toast-container {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 420px;
+    width: calc(100% - 4rem);
+  }
+
+  .toast-alert {
+    background: rgba(8, 12, 24, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.15rem 1.4rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    animation: toast-slide-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+
+  @keyframes toast-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .toast-alert.approved {
+    border-left: 4px solid var(--apple-green);
+  }
+
+  .toast-alert.rejected {
+    border-left: 4px solid #ff453a;
+  }
+
+  .toast-close {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0.15rem;
+    line-height: 1;
+  }
+
+  .toast-close:hover {
+    color: var(--text-bright);
+  }
+
+  /* Discussion Forum Style */
+  .disc-container {
+    padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-height: 520px;
+    overflow-y: auto;
+  }
+
+  .disc-input-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .disc-field-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .disc-input {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    color: var(--text-bright);
+    font-size: 0.85rem;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+  }
+
+  .disc-input:focus {
+    border-color: var(--apple-blue);
+  }
+
+  .disc-btn {
+    background: linear-gradient(135deg, var(--apple-blue) 0%, var(--apple-indigo) 100%);
+    border: none;
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: filter 0.2s;
+  }
+
+  .disc-btn:hover {
+    filter: brightness(1.1);
+  }
+
+  /* Comments Thread tree layout */
+  .comment-thread-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+    position: relative;
+  }
+
+  .comment-node {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: relative;
+  }
+
+  .comment-main {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .comment-avatar {
+    width: 2.2rem;
+    height: 2.2rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--apple-indigo) 0%, var(--apple-purple) 100%);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    flex-shrink: 0;
+  }
+
+  .comment-body {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 0.75rem 1rem;
+    position: relative;
+  }
+
+  .comment-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-bottom: 0.35rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .comment-author {
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  .comment-content {
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    line-height: 1.45;
+  }
+
+  .comment-actions {
+    display: flex;
+    gap: 0.85rem;
+    margin-top: 0.4rem;
+    font-size: 0.72rem;
+  }
+
+  .comment-action-btn {
+    background: transparent;
+    border: none;
+    color: var(--apple-blue);
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0;
+  }
+
+  /* Nested replies indentation */
+  .comment-replies {
+    margin-left: 2.5rem;
+    padding-left: 0.75rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .reply-form-inline {
+    display: none;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 0.85rem;
+    margin-top: 0.5rem;
+    margin-left: 2.5rem;
+  }
+
+  /* Card actions */
+  .card-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .btn-outline-blue {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.55rem 0.55rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    text-decoration: none;
+    border-radius: 10px;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+
+  .btn-outline-blue:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-bright);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .btn-solid-blue {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.55rem 0.55rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--apple-blue), var(--apple-indigo));
+    border: none;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: transform 0.15s, filter 0.2s;
+  }
+
+  .btn-solid-blue:hover {
+    filter: brightness(1.1);
+  }
+
+  @keyframes fadeSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Toasts */
+  #validationToast,
+  #downloadToast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.85rem 1.3rem;
+    background: rgba(8, 12, 24, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 2px solid var(--apple-blue);
+    border-radius: 16px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    min-width: 300px;
+    max-width: 90vw;
+    pointer-events: none;
+    opacity: 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  #validationToast.toast-show,
+  #downloadToast.toast-show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .toast-icon {
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    color: var(--apple-blue);
+  }
+
+  .toast-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex: 1;
+  }
+
+  .toast-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  .toast-msg {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    color: var(--text-mid);
+    line-height: 1.4;
+  }
+
+  .toast-close {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0.1rem 0.3rem;
+    flex-shrink: 0;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+
+  .toast-close:hover {
+    color: var(--apple-blue);
+  }
+
+  .toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--apple-blue), var(--apple-purple));
+    width: 100%;
+    transform-origin: left;
+  }
+
+  #downloadToast {
+    border-top: 2px solid #30b0c7;
+  }
+
+  .dl-toast-icon {
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    color: #30b0c7;
+  }
+
+  #downloadToast .toast-progress {
+    background: linear-gradient(90deg, #30b0c7, #00ffb3);
+  }
+
+  #downloadToast .toast-close:hover {
+    color: #30b0c7;
+  }
+
+  @media (min-width: 768px) {
+    #validationToast {
+      transform: translateX(-50%) translateY(-120%);
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+    }
+
+    #validationToast.toast-show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #downloadToast {
+      transform: translateX(-50%) translateY(-140%);
+      transition: transform 0.28s ease-out, opacity 0.28s ease-out;
+    }
+
+    #downloadToast.toast-show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #validationToast.toast-show .toast-progress,
+    #downloadToast.toast-show .toast-progress {
+      animation: toast-drain 3s linear forwards;
+    }
+
+    @keyframes toast-drain {
+      from {
+        transform: scaleX(1);
+      }
+
+      to {
+        transform: scaleX(0);
+      }
+    }
+  }
+
+  /* Mobile responsiveness */
+  @media (max-width: 640px) {
+    .filter-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .search-card-inner {
+      padding: 1.6rem 1.2rem;
+    }
+
+    .papers-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .stats-bar {
+      gap: 1.5rem;
+    }
+
+    #validationToast,
+    #downloadToast {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      background: #0c101b !important;
+    }
+
+    .paper-card {
+      opacity: 1 !important;
+      animation: mobileFadeIn 0.25s ease both !important;
+      transform: none !important;
+      transition: border-color 0.15s !important;
+    }
+
+    .paper-card:hover {
+      transform: none !important;
+    }
+  }
+
+  @keyframes mobileFadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+</style>
+
+<div class="page-wrap">
+
+  <section class="hero">
+    <div class="hero-watermark">Q</div>
+
+    <div class="hero-eyebrow">
+      <div class="hero-eyebrow-line"></div>
+      <span>AI-Powered study tools</span>
+      <div class="hero-eyebrow-line right"></div>
+    </div>
+
+    <h1 class="hero-title">
+      <span class="line-1">STUDY-EXAM</span>
+      <span class="line-2">VAULT</span>
+    </h1>
+
+    <p class="hero-sub">
+      Search semester papers, download question resources, discuss in study groups, and practice mock exams.
+    </p>
+
+    {% if not session.get('student_logged_in') %}
+    <div class="hero-note"
+      style="margin: 0.5rem auto 1.5rem; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); padding: 0.75rem 1.25rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--text-mid); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.15); max-width: 90%; text-align: left;">
+      <span style="font-size: 1rem;">💡</span>
+      <span><strong>Sign up</strong> to access more features (Mock Exams, Study Groups, Download History, & more). <a
+          href="/student/register"
+          style="color: var(--primary); font-weight: 700; text-decoration: none; margin-left: 0.25rem;">Register Now
+          &rarr;</a></span>
+    </div>
+    {% endif %}
+
+    <div class="search-card">
+      <div class="glass-card p-6 md:p-8">
+        <button class="clear-btn" title="Clear all filters" onclick="clearFilters()">✕</button>
+
+        <div class="card-title">🎯Search Papers</div>
+
+
+
+        <div class="search-input-wrap">
+          <label class="filter-label" for="searchInput">Search</label>
+          <input type="text" id="searchInput" class="qh-input"
+            placeholder="Search Subject Name or Code (e.g. Java, CS301)">
+        </div>
+
+        <div class="filter-grid">
+          <!-- Department | Class (Year of Study) | Semester -->
+          <div>
+            <label class="filter-label" for="deptFilter">Department</label>
+            <select id="deptFilter" class="qh-input">
+              <option value="" disabled selected>Select Department</option>
+              <option value="all">All Departments</option>
+              {% for d in departments %}
+              {% if d and d not in ['Select Department', 'All Departments', 'all'] %}
+              <option value="{{ d }}">{{ d }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="filter-label" for="classFilter">Class</label>
+            <select id="classFilter" class="qh-input" onchange="updateSemesterOptions()">
+              <option value="">Any Class</option>
+              <option value="I-year">I-year</option>
+              <option value="II-year">II-year</option>
+              <option value="III-year">III-year</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="filter-label" for="semFilter">Semester</label>
+            <select id="semFilter" class="qh-input">
+              <option value="">Any Semester</option>
+              {% for s in semesters %}
+              {% if s and s not in ['Select Semester', 'Any Semester', 'All Semesters', 'Select'] %}
+              <option value="{{ s }}">{{ s }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+          <button class="search-btn" onclick="fetchPapers()" style="flex:2; margin-top:0;">
+            ⚡ Generate paper
+          </button>
+          <button id="bookmarkFilterBtn" class="btn-outline-blue" onclick="toggleBookmarksFilter()"
+            style="flex:1; padding:0.85rem; border-radius:9999px; font-family:'Plus Jakarta Sans',sans-serif; font-size:0.8rem; font-weight:700; cursor:pointer; color:var(--text-mid); border: 1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; gap:0.35rem;">
+            ⭐ Saved (<span id="bookmarkCount">0</span>)
+          </button>
+        </div>
+
+        <p id="resultCount" class="result-count"></p>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-num"><em>500+</em></div>
+          <div class="stat-label">Papers</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num"><em>5</em></div>
+          <div class="stat-label">Years</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num"><em>All</em></div>
+          <div class="stat-label">Departments</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num"><em>Free</em></div>
+          <div class="stat-label">Download</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="results-section" id="papers">
+
+    <div class="section-header" id="resultsHeader" style="display:none;">
+      <div class="section-header-line"></div>
+      <span class="section-header-title">Results</span>
+      <div class="section-header-line" style="background: linear-gradient(90deg, transparent, rgba(0,122,255,0.3));">
+      </div>
+    </div>
+
+    <div id="loadingState" class="loading-state">
+      <div class="spinner"></div>
+      <p
+        style="color:var(--text-mid); font-size:0.85rem; font-family:'Plus Jakarta Sans',sans-serif; letter-spacing:0.04em; text-transform:uppercase; font-weight: 500;">
+        Searching the vault…
+      </p>
+    </div>
+
+    <div id="emptyState" class="empty-state">
+      <div class="empty-icon">🌌</div>
+      <p>No papers found for your search.</p>
+      <p>Try adjusting the filters or search term.</p>
+    </div>
+
+    <div id="yearPills" class="year-pills-container"
+      style="display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto;"></div>
+
+    <div id="papersGrid" class="papers-grid"></div>
+  </section>
+
+</div>
+
+<!-- ── Validation Toast ───────────────────────────────────────────────────── -->
+<div id="validationToast" role="alert" aria-live="assertive">
+  <span class="toast-icon">⚡</span>
+  <div class="toast-body">
+    <span class="toast-title">All Fields Required</span>
+    <span class="toast-msg">Please select all fields before generating papers.</span>
+  </div>
+  <button class="toast-close" onclick="dismissToast()" aria-label="Dismiss">✕</button>
+  <div class="toast-progress"></div>
+</div>
+
+<!-- ── Download Success Toast ────────────────────────────────────────────── -->
+<div id="downloadToast" role="status" aria-live="polite">
+  <span class="dl-toast-icon">✓</span>
+  <div class="toast-body">
+    <span class="toast-title">Download Starting</span>
+    <span class="toast-msg">Your paper is downloading now.</span>
+  </div>
+  <button class="toast-close" onclick="dismissDownloadToast()" aria-label="Dismiss">✕</button>
+  <div class="toast-progress"></div>
+</div>
+
+<!-- Container for Student Contribution Status Toasts -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ── AI Study Guide Sidebar Panel ────────────────────────────────────────── -->
+<div id="aiSidebar" class="ai-sidebar">
+  <div class="ai-sidebar-header">
+    <div style="max-width: 82%;">
+      <h3 class="ai-sidebar-title" id="aiSidebarTitle">AI Study Guide</h3>
+      <span class="ai-sidebar-subtitle" id="aiSidebarSubtitle">Subject Code</span>
+    </div>
+    <button onclick="closeAiSidebar()" class="ai-close-btn" aria-label="Close panel">✕</button>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="ai-tabs">
+    <button id="tab-two_marks" class="ai-tab-btn active" onclick="switchAiTab('two_marks')">🎯 2-Marks</button>
+    <button id="tab-chat" class="ai-tab-btn" onclick="switchAiTab('chat')">💬 Ask Tutor</button>
+    <button id="tab-discuss" class="ai-tab-btn" onclick="switchAiTab('discuss')">💬 Discuss (<span
+        id="discussionCount">0</span>)</button>
+  </div>
+
+  <!-- Content Panel -->
+  <div class="ai-content-wrap">
+    <!-- Shimmer Loader -->
+    <div id="aiLoader" class="ai-loader-box" style="display:none; margin-top: 1rem;">
+      <div class="ai-shimmer-title"></div>
+      <div class="ai-shimmer-line"></div>
+      <div class="ai-shimmer-line"></div>
+      <div class="ai-shimmer-line" style="width:70%;"></div>
+      <p
+        style="text-align:center; color:var(--text-dim); font-size:0.8rem; margin-top:2rem; font-family:'Plus Jakarta Sans',sans-serif; letter-spacing:0.04em;">
+        AI is formulating study materials...
+      </p>
+    </div>
+
+    <!-- Rendered Markdown Content -->
+    <div id="aiMarkdownBody" class="ai-markdown-body fade-in"></div>
+
+    <!-- Chat Interface Container (only shown on Ask Tutor tab) -->
+    <div id="aiChatContainer" class="ai-chat-box" style="display:none; flex:1;">
+      <div id="aiChatHistory" class="ai-chat-history">
+        <!-- Messages appended dynamically -->
+      </div>
+      <div class="ai-chat-input-row">
+        <input type="text" id="aiChatInput" class="glass-input" placeholder="Ask details about exam topics..."
+          onkeydown="if(event.key==='Enter')sendAiChatMessage()" />
+        <button onclick="sendAiChatMessage()" class="btn-solid-blue"
+          style="border-radius:10px; padding:0.5rem 1rem; font-size:0.85rem; flex-shrink:0;">
+          Send
+        </button>
+      </div>
+    </div>
+
+    <!-- Discussion Panel Container (only shown on Discuss tab) -->
+    <div id="aiDiscussionContainer" class="disc-container"
+      style="display:none; flex:1; overflow-y:auto; padding-right:4px;">
+      <!-- Comment Submission Form -->
+      <div class="disc-input-box">
+        <div
+          style="font-family:'Plus Jakarta Sans',sans-serif; font-size:0.85rem; font-weight:700; color:var(--text-bright); margin-bottom:0.75rem;">
+          Post a Doubt / Answer</div>
+        <div class="disc-field-grid">
+          <input type="text" id="discAuthor" class="disc-input" placeholder="Your Name (Optional)" />
+        </div>
+        <textarea id="discContent" class="disc-input" placeholder="Ask a doubt or share an answer..."
+          style="resize:vertical; min-height:80px; margin-bottom:0.85rem;"></textarea>
+        <button onclick="submitDiscussionPost(null, event)" class="disc-btn" style="width:100%;">🚀 Post
+          Comment</button>
+      </div>
+
+      <!-- Scrollable Comment Threads Tree -->
+      <div id="discThreads" class="comment-thread-wrapper">
+        <!-- Appended dynamically -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop overlay -->
+<div id="aiSidebarOverlay" class="ai-overlay-backdrop" onclick="closeAiSidebar()"></div>
+
+<style>
+  /* AI Sidebar Transition Styles */
+  .ai-sidebar {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 420px;
+    max-width: 95vw;
+    height: 100vh;
+    background: rgba(8, 12, 24, 0.94);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 99999;
+    box-shadow: -15px 0 45px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+    transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .ai-sidebar.open {
+    right: 0;
+  }
+
+  .ai-sidebar-header {
+    padding: 1.5rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .ai-sidebar-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-bright);
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .ai-sidebar-subtitle {
+    font-size: 0.72rem;
+    color: var(--apple-blue);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .ai-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+    padding: 0.3rem 0.5rem;
+  }
+
+  .ai-close-btn:hover {
+    color: #ff453a;
+  }
+
+  /* Tabs */
+  .ai-tabs {
+    display: flex;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    padding: 0 0.5rem;
+  }
+
+  .ai-tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 0.76rem;
+    font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    padding: 0.85rem 0;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+
+  .ai-tab-btn:hover {
+    color: var(--text-bright);
+  }
+
+  .ai-tab-btn.active {
+    color: var(--apple-blue);
+    border-bottom-color: var(--apple-blue);
+  }
+
+  /* Content Panel */
+  .ai-content-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (max-width: 767px) {
+    .ai-content-wrap {
+      padding-bottom: 90px; /* Prevents content from being covered by floating bottom nav */
+    }
+  }
+
+  .ai-overlay-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99998;
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  /* Markdown parsing styling */
+  .ai-markdown-body {
+    color: var(--text-mid);
+    font-size: 0.86rem;
+    line-height: 1.65;
+  }
+
+  .ai-markdown-body h1,
+  .ai-markdown-body h2,
+  .ai-markdown-body h3 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--text-bright);
+    font-weight: 700;
+    margin-top: 1.25rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .ai-markdown-body h1 {
+    font-size: 1.2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 0.35rem;
+  }
+
+  .ai-markdown-body h2 {
+    font-size: 1.02rem;
+  }
+
+  .ai-markdown-body h3 {
+    font-size: 0.9rem;
+  }
+
+  .ai-markdown-body ul,
+  .ai-markdown-body ol {
+    padding-left: 1.2rem;
+    margin-bottom: 1rem;
+  }
+
+  .ai-markdown-body li {
+    margin-bottom: 0.45rem;
+  }
+
+  .ai-markdown-body blockquote {
+    border-left: 3px solid var(--apple-blue);
+    background: rgba(0, 122, 255, 0.04);
+    padding: 0.65rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .ai-markdown-body details {
+    margin-bottom: 0.85rem;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .ai-markdown-body summary {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    color: var(--apple-teal);
+    font-weight: 600;
+    outline: none;
+    background: rgba(255, 255, 255, 0.01);
+  }
+
+  .ai-markdown-body details[open] summary {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .ai-markdown-body details p {
+    padding: 0.65rem 0.75rem;
+    margin: 0;
+    font-size: 0.8rem;
+  }
+
+  /* Chat Styles */
+  .ai-chat-box {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ai-chat-history {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    max-height: 64vh;
+    padding-right: 0.25rem;
+  }
+
+  .ai-chat-msg {
+    padding: 0.75rem 0.9rem;
+    border-radius: 12px;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    max-width: 85%;
+    word-break: break-word;
+  }
+
+  .ai-chat-msg.student {
+    background: var(--apple-blue);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+  }
+
+  .ai-chat-msg.tutor {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-mid);
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .ai-chat-msg.tutor p {
+    margin-bottom: 0.5rem;
+  }
+
+  .ai-chat-msg.tutor p:last-child {
+    margin-bottom: 0;
+  }
+
+  .ai-chat-input-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 0.85rem;
+  }
+
+  /* Shimmer Loader Animations */
+  .ai-loader-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    animation: pulseShimmer 1.8s infinite ease-in-out;
+  }
+
+  .ai-shimmer-title {
+    height: 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    width: 60%;
+  }
+
+  .ai-shimmer-line {
+    height: 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+    width: 100%;
+  }
+
+  @keyframes pulseShimmer {
+
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+
+    50% {
+      opacity: 0.8;
+    }
+  }
+</style>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script defer>
+  // ── Smart PDF Preview ─────────────────────────────────────────────────────────
+  // Mobile  → Google Docs Viewer (cache-busted) to avoid native renderer issues
+  // Desktop → Direct /view/ route for fast native browser PDF viewer
+  function openSmartPreview(paperId) {
+    var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
+      .test(navigator.userAgent);
+    var isLocalhost = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1' || 
+                        window.location.hostname.startsWith('192.168.') || 
+                        window.location.hostname.startsWith('10.') ||
+                        window.location.hostname.endsWith('.local');
+    var url;
+    if (isMobile && !isLocalhost) {
+      var directUrl = window.location.origin + '/view/' + paperId + '?t=' + Date.now();
+      url = 'https://docs.google.com/viewer?url='
+        + encodeURIComponent(directUrl)
+        + '&embedded=true';
+    } else {
+      url = '/view/' + paperId;
+    }
+    window.open(url, '_blank');
+  }
+
+  // ── Dynamic Semester options based on selected Class (Year of Study) ──────────
+  const SEMESTER_OPTIONS_BY_CLASS = {
+    'I-year': [{ val: '1st', text: '1st Semester' }, { val: '2nd', text: '2nd Semester' }],
+    'II-year': [{ val: '3rd', text: '3rd Semester' }, { val: '4th', text: '4th Semester' }],
+    'III-year': [{ val: '5th', text: '5th Semester' }, { val: '6th', text: '6th Semester' }],
+  };
+  const ALL_SEMESTER_OPTIONS = [
+    { val: '1st', text: '1st Semester' },
+    { val: '2nd', text: '2nd Semester' },
+    { val: '3rd', text: '3rd Semester' },
+    { val: '4th', text: '4th Semester' },
+    { val: '5th', text: '5th Semester' },
+    { val: '6th', text: '6th Semester' },
+  ];
+
+  function updateSemesterOptions() {
+    const classVal = document.getElementById('classFilter').value;
+    const semSelect = document.getElementById('semFilter');
+
+    const semOptions = SEMESTER_OPTIONS_BY_CLASS[classVal] || ALL_SEMESTER_OPTIONS;
+
+    semSelect.options.length = 0;
+    semSelect.add(new Option('Any Semester', ''));
+    semOptions.forEach(sem => {
+      const opt = new Option();
+      opt.value = sem.val;
+      opt.textContent = sem.text;
+      semSelect.add(opt);
+    });
+  }
+
+  // ── Clear filters ─────────────────────────────────────────────────────────────
+  function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    ['deptFilter', 'semFilter', 'classFilter']
+      .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    updateSemesterOptions();
+    document.getElementById('papersGrid').innerHTML = '';
+    document.getElementById('yearPills').innerHTML = '';
+    document.getElementById('resultCount').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('resultsHeader').style.display = 'none';
+  }
+
+  // ── Scroll to results ─────────────────────────────────────────────────────────
+  function scrollToResults() {
+    const el = document.getElementById('papers');
+    if (el) {
+      // Small delay so grid renders before scroll — avoids janky intermediate position
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }
+
+  // ── Filter validation ─────────────────────────────────────────────────────────
+  // Passes if the search input has text, OR Class + Department + Semester are all selected.
+  function allFieldsSelected() {
+    const searchVal = document.getElementById('searchInput').value.trim();
+    if (searchVal !== '') return true;
+
+    const required = [
+      { id: 'deptFilter', label: 'Department' },
+      { id: 'classFilter', label: 'Class' },
+      { id: 'semFilter', label: 'Semester' },
+    ];
+
+    const missing = required
+      .filter(f => {
+        const el = document.getElementById(f.id);
+        return !el || el.value.trim() === '';
+      })
+      .map(f => f.label);
+
+    if (missing.length > 0) {
+      // Update the toast message dynamically to list exactly which fields are missing
+      const msgEl = document.querySelector('#validationToast .toast-msg');
+      if (msgEl) {
+        msgEl.textContent = 'Please enter a search term, or select: ' + missing.join(', ') + '.';
+      }
+      return false;
+    }
+    return true;
+  }
+
+  // ── Toast helpers ─────────────────────────────────────────────────────────────
+  var _toastTimer = null;
+
+  function showToast() {
+    var toast = document.getElementById('validationToast');
+    toast.classList.remove('toast-show');
+    void toast.offsetWidth; // force reflow to restart CSS animation
+    toast.classList.add('toast-show');
+
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(dismissToast, 3000);
+  }
+
+  function dismissToast() {
+    clearTimeout(_toastTimer);
+    document.getElementById('validationToast').classList.remove('toast-show');
+  }
+
+  // ── Download toast helpers ────────────────────────────────────────────────────
+  // IMPORTANT: showDownloadToast() must NEVER call event.preventDefault() or
+  // return false — it is attached as inline onclick on an <a href="…"> tag;
+  // returning undefined lets the browser proceed with the download immediately.
+  var _dlToastTimer = null;
+  var _dlToastVisible = false;
+
+  function showDownloadToast() {
+    if (_dlToastVisible) {
+      clearTimeout(_dlToastTimer);
+      _dlToastTimer = setTimeout(dismissDownloadToast, 3000);
+      return;
+    }
+    _dlToastVisible = true;
+    document.getElementById('downloadToast').classList.add('toast-show');
+    clearTimeout(_dlToastTimer);
+    _dlToastTimer = setTimeout(dismissDownloadToast, 3000);
+  }
+
+  function dismissDownloadToast() {
+    clearTimeout(_dlToastTimer);
+    _dlToastVisible = false;
+    document.getElementById('downloadToast').classList.remove('toast-show');
+  }
+
+  // ── Fetch & render ────────────────────────────────────────────────────────────
+  async function fetchPapers() {
+    // Strict validation — all required dropdowns must be filled
+    if (!allFieldsSelected()) {
+      showToast();
+      return;
+    }
+
+    const params = new URLSearchParams({
+      q: document.getElementById('searchInput').value.trim(),
+      class_name: document.getElementById('classFilter').value,
+      department: document.getElementById('deptFilter').value,
+      semester: document.getElementById('semFilter').value,
+    });
+
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/papers?${params}`);
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const papers = await res.json();
+      renderPapers(papers);
+      scrollToResults();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function setLoading(on) {
+    document.getElementById('loadingState').style.display = on ? 'flex' : 'none';
+    if (on) {
+      document.getElementById('papersGrid').innerHTML = '';
+      document.getElementById('yearPills').innerHTML = '';
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('resultsHeader').style.display = 'none';
+    }
+  }
+
+  // ── Render papers — uses DocumentFragment for a single DOM insertion ──────────
+  function renderPapers(papers) {
+    const grid = document.getElementById('papersGrid');
+    const empty = document.getElementById('emptyState');
+    const count = document.getElementById('resultCount');
+    const header = document.getElementById('resultsHeader');
+    const pillsBox = document.getElementById('yearPills');
+
+    // Clear previous results
+    grid.innerHTML = '';
+    pillsBox.innerHTML = '';
+
+    if (!papers.length) {
+      empty.style.display = 'block';
+      count.style.display = 'none';
+      header.style.display = 'none';
+      return;
+    }
+
+    empty.style.display = 'none';
+    header.style.display = 'flex';
+
+    count.innerHTML = `<span>${papers.length}</span> paper${papers.length !== 1 ? 's' : ''} found`;
+    count.style.display = 'block';
+
+    // Build all cards in a fragment — single reflow instead of one per card
+    const frag = document.createDocumentFragment();
+
+    papers.forEach((p, i) => {
+      const badgeClass = (p.exam_type || '').toLowerCase().includes('model')
+        ? 'badge-model'
+        : 'badge-semester';
+
+      const card = document.createElement('div');
+      card.className = 'paper-card';
+      card.setAttribute('data-year', p.year);
+      // Stagger delay capped to avoid very long waits on big result sets
+      card.style.animationDelay = `${Math.min(i * 0.05, 0.6)}s`;
+
+      const isSaved = isPaperBookmarked(p.id);
+      const starIcon = isSaved ? '★' : '☆';
+      const activeClass = isSaved ? 'active' : '';
+
+      card.innerHTML = `
+      <button class="card-bookmark-btn ${activeClass}" onclick="toggleBookmark('${p.id}', event)" title="${isSaved ? 'Remove Bookmark' : 'Bookmark Paper'}">
+        ${starIcon}
+      </button>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.9rem; padding-right:1.5rem;">
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+          <span class="badge ${badgeClass}">${p.exam_type}</span>
+          <span class="badge badge-year">${p.year}</span>
+        </div>
+        <span class="card-date">${p.uploaded_at}</span>
+      </div>
+
+      <div class="card-subject">${p.subject_name}</div>
+      <div class="card-code">${p.subject_code}</div>
+      <div class="card-meta">${p.department} &middot; Semester ${p.semester}${p.class_name ? ' &middot; ' + p.class_name : ''}</div>
+
+      <div class="card-actions" style="margin-bottom: 0.5rem; display:flex; gap:0.4rem;">
+        <a href="javascript:void(0);" onclick="openSmartPreview('${p.id}')" class="btn-outline-blue" style="font-size:0.75rem; padding:0.45rem; flex:1;">
+          👁 Preview
+        </a>
+        <a href="/download/${p.id}"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="btn-solid-blue"
+           style="font-size:0.75rem; padding:0.45rem; flex:1;"
+           onclick="showDownloadToast()">
+          ⬇ Download
+        </a>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:0.4rem;">
+        <button onclick="openAiGuide('${p.id}', \`${(p.subject_name || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`, '${p.subject_code}')" class="btn-solid-blue" style="width:100%; justify-content:center; background: linear-gradient(135deg, var(--apple-purple) 0%, var(--apple-indigo) 100%); box-shadow: 0 4px 10px rgba(175, 82, 222, 0.25); font-size:0.78rem; padding:0.45rem; border-radius:10px;">
+          ✨ AI Study Guide
+        </button>
+        <div style="display:flex; gap:0.4rem; width:100%;">
+          <button onclick="openResourcesModal('${p.id}', \`${(p.subject_name || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`, '${p.subject_code}')" class="btn-outline-blue" style="flex:1; text-align:center; display:flex; justify-content:center; align-items:center; font-size:0.78rem; padding:0.45rem;">
+            📚 Resources
+          </button>
+          <a href="/student/mock/${p.id}" class="btn-outline-blue" style="flex:1; text-align:center; display:flex; justify-content:center; align-items:center; background:rgba(79, 70, 229, 0.05); border-color:rgba(79, 70, 229, 0.2); color:#a5b4fc; font-size:0.78rem; padding:0.45rem;">
+            📝 Mock Exam
+          </a>
+        </div>
+      </div>
+    `;
+
+      frag.appendChild(card);
+    });
+
+    // Single DOM write — eliminates per-card reflow
+    grid.appendChild(frag);
+
+    // ── Year Pills ──────────────────────────────────────────────────────────────
+    const years = [...new Set(papers.map(p => p.year))].sort((a, b) => b - a);
+
+    const pillsFrag = document.createDocumentFragment();
+
+    const allPill = document.createElement('button');
+    allPill.className = 'year-pill active';
+    allPill.textContent = 'All Years';
+    allPill.dataset.year = 'all';
+    pillsFrag.appendChild(allPill);
+
+    years.forEach(year => {
+      const pill = document.createElement('button');
+      pill.className = 'year-pill';
+      pill.textContent = year;
+      pill.dataset.year = year;
+      pillsFrag.appendChild(pill);
+    });
+
+    pillsBox.appendChild(pillsFrag);
+
+    pillsBox.querySelectorAll('.year-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        pillsBox.querySelectorAll('.year-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+
+        const selectedYear = pill.dataset.year;
+        grid.querySelectorAll('.paper-card').forEach(card => {
+          if (selectedYear === 'all' || card.getAttribute('data-year') === selectedYear) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+  }
+
+  // ── AI Study Assistant JavaScript ───────────────────────────────────────────
+  let currentAiPaperId = null;
+  let currentAiTab = 'two_marks';
+  let aiChatHistory = {}; // Store history per paper
+
+  function openAiGuide(paperId, subjectName, subjectCode) {
+    currentAiPaperId = paperId;
+    currentAiTab = 'two_marks';
+
+    // Set title metadata
+    document.getElementById('aiSidebarTitle').textContent = subjectName;
+    document.getElementById('aiSidebarSubtitle').textContent = subjectCode;
+
+    // Open Sidebar & Backdrop
+    document.getElementById('aiSidebarOverlay').style.display = 'block';
+    document.getElementById('aiSidebar').classList.add('open');
+
+    // Reset tabs
+    document.querySelectorAll('.ai-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('tab-two_marks').classList.add('active');
+
+    // Reset panels
+    document.getElementById('aiChatContainer').style.display = 'none';
+    document.getElementById('aiDiscussionContainer').style.display = 'none';
+    document.getElementById('aiMarkdownBody').style.display = 'block';
+
+    // Load Revision Notes
+    fetchAiStudyMaterial('two_marks');
+
+    // Load discussion count & posts
+    loadDiscussion(paperId);
+  }
+
+  function closeAiSidebar() {
+    document.getElementById('aiSidebar').classList.remove('open');
+    document.getElementById('aiSidebarOverlay').style.display = 'none';
+    currentAiPaperId = null;
+  }
+
+  function switchAiTab(tabName) {
+    if (currentAiTab === tabName) return;
+
+    currentAiTab = tabName;
+    document.querySelectorAll('.ai-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+
+    if (tabName === 'chat') {
+      document.getElementById('aiMarkdownBody').style.display = 'none';
+      document.getElementById('aiDiscussionContainer').style.display = 'none';
+      document.getElementById('aiChatContainer').style.display = 'flex';
+      initializeChatHistory();
+    } else if (tabName === 'discuss') {
+      document.getElementById('aiMarkdownBody').style.display = 'none';
+      document.getElementById('aiChatContainer').style.display = 'none';
+      document.getElementById('aiDiscussionContainer').style.display = 'flex';
+      loadDiscussion(currentAiPaperId);
+    } else {
+      document.getElementById('aiChatContainer').style.display = 'none';
+      document.getElementById('aiDiscussionContainer').style.display = 'none';
+      document.getElementById('aiMarkdownBody').style.display = 'block';
+      fetchAiStudyMaterial(tabName);
+    }
+  }
+
+  async function fetchAiStudyMaterial(action) {
+    const markdownBody = document.getElementById('aiMarkdownBody');
+    const loader = document.getElementById('aiLoader');
+
+    markdownBody.style.display = 'none';
+    loader.style.display = 'block';
+
+    try {
+      const res = await fetch('/api/ai/study-guide', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          paper_id: currentAiPaperId,
+          action: action
+        })
+      });
+
+      if (!res.ok) throw new Error("HTTP error " + res.status);
+      const data = await res.json();
+
+      if (data.success) {
+        markdownBody.innerHTML = marked.parse(data.response);
+        markdownBody.style.display = 'block';
+      } else {
+        markdownBody.innerHTML = `<blockquote style="border-left-color:#ff453a; background:rgba(255,69,58,0.05); color:#ff453a;">Error: ${data.error}</blockquote>`;
+        markdownBody.style.display = 'block';
+      }
+    } catch (e) {
+      markdownBody.innerHTML = `<blockquote style="border-left-color:#ff453a; background:rgba(255,69,58,0.05); color:#ff453a;">Network error occurred while fetching AI Study material. Please try again.</blockquote>`;
+      markdownBody.style.display = 'block';
+    } finally {
+      loader.style.display = 'none';
+    }
+  }
+
+  async function initializeChatHistory() {
+    const historyBox = document.getElementById('aiChatHistory');
+    historyBox.innerHTML = '<div style="text-align:center; color:var(--text-lo); font-size:0.75rem; font-style:italic; padding:1rem;">Loading history...</div>';
+
+    try {
+      const res = await fetch(`/api/ai/chat/history/${currentAiPaperId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.history.length > 0) {
+          historyBox.innerHTML = '';
+          data.history.forEach(msg => {
+            appendChatMessage(msg.sender, msg.message);
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Error fetching chat history:", e);
+    }
+
+    historyBox.innerHTML = '';
+    appendChatMessage('tutor', `Hello! I am your AI Tutor. Ask me any question about the curriculum, concepts, or questions in this exam paper. How can I help you study today?`);
+  }
+
+  function appendChatMessage(sender, text) {
+    const historyBox = document.getElementById('aiChatHistory');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `ai-chat-msg ${sender}`;
+
+    if (sender === 'tutor') {
+      msgDiv.innerHTML = marked.parse(text);
+    } else {
+      msgDiv.textContent = text;
+    }
+
+    historyBox.appendChild(msgDiv);
+    historyBox.scrollTop = historyBox.scrollHeight;
+  }
+
+  async function sendAiChatMessage() {
+    const input = document.getElementById('aiChatInput');
+    const query = input.value.trim();
+    if (!query) return;
+
+    input.value = '';
+
+    appendChatMessage('student', query);
+
+    const historyBox = document.getElementById('aiChatHistory');
+    const loadDiv = document.createElement('div');
+    loadDiv.className = 'ai-chat-msg tutor';
+    loadDiv.innerHTML = '<span class="spinner" style="width:16px; height:16px; display:inline-block; vertical-align:middle; margin-right:6px;"></span> AI is thinking...';
+    historyBox.appendChild(loadDiv);
+    historyBox.scrollTop = historyBox.scrollHeight;
+
+    try {
+      const res = await fetch('/api/ai/study-guide', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          paper_id: currentAiPaperId,
+          action: 'chat',
+          message: query
+        })
+      });
+
+      loadDiv.remove();
+
+      if (!res.ok) throw new Error("HTTP error " + res.status);
+      const data = await res.json();
+
+      if (data.success) {
+        appendChatMessage('tutor', data.response);
+      } else {
+        appendChatMessage('tutor', `Sorry, I encountered an error: ${data.error}`);
+      }
+    } catch (e) {
+      if (loadDiv) loadDiv.remove();
+      appendChatMessage('tutor', `Failed to connect to the tutor assistant. Please check your network connection.`);
+    }
+  }
+
+  // ── Discussion Forum Functions ───────────────────────────────────────────────
+
+  async function loadDiscussion(paperId) {
+    if (!paperId) return;
+
+    const threadsContainer = document.getElementById('discThreads');
+    const countBadge = document.getElementById('discussionCount');
+
+    // Show loading state
+    threadsContainer.innerHTML = '<div style="text-align:center; padding:1.5rem; color:var(--text-dim); font-size:0.82rem;">Loading discussions...</div>';
+
+    try {
+      const res = await fetch(`/api/papers/${paperId}/discussion`);
+      if (!res.ok) throw new Error('Failed to load');
+      const posts = await res.json();
+
+      // Update count badge
+      countBadge.textContent = posts.length;
+
+      if (posts.length === 0) {
+        threadsContainer.innerHTML = `
+        <div style="text-align:center; padding:2rem 1rem; color:var(--text-dim);">
+          <div style="font-size:2rem; margin-bottom:0.5rem;">💬</div>
+          <p style="font-size:0.85rem; margin:0;">No discussions yet. Start the conversation!</p>
+        </div>
+      `;
+        return;
+      }
+
+      // Build nested tree
+      const topLevel = posts.filter(p => !p.parent_id);
+      const replies = posts.filter(p => p.parent_id);
+      const replyMap = {};
+      replies.forEach(r => {
+        if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
+        replyMap[r.parent_id].push(r);
+      });
+
+      threadsContainer.innerHTML = '';
+      topLevel.forEach(post => {
+        threadsContainer.appendChild(buildCommentNode(post, replyMap));
+      });
+
+    } catch (e) {
+      console.error('Discussion load error:', e);
+      threadsContainer.innerHTML = '<div style="text-align:center; padding:1.5rem; color:#ff6b6b; font-size:0.82rem;">Failed to load discussions.</div>';
+    }
+  }
+
+  function buildCommentNode(post, replyMap) {
+    const node = document.createElement('div');
+    node.className = 'comment-node';
+
+    const initials = post.author_name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+
+    node.innerHTML = `
+    <div class="comment-main">
+      <div class="comment-avatar">${initials}</div>
+      <div class="comment-body">
+        <div class="comment-meta">
+          <span class="comment-author">${escapeHtml(post.author_name)}</span>
+          <span>${post.created_at}</span>
+        </div>
+        <div class="comment-content">${escapeHtml(post.content)}</div>
+        <div class="comment-actions">
+          <button class="comment-action-btn" onclick="showReplyForm(${post.id}, this)">↩ Reply</button>
+        </div>
+      </div>
+    </div>
+    <div class="reply-form-inline" id="replyForm-${post.id}">
+      <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+        <input type="text" class="disc-input" id="replyAuthor-${post.id}" placeholder="Your Name (Optional)" style="flex:1;" />
+      </div>
+      <textarea class="disc-input" id="replyContent-${post.id}" placeholder="Write a reply..." style="resize:vertical; min-height:55px; margin-bottom:0.5rem;"></textarea>
+      <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+        <button class="comment-action-btn" onclick="hideReplyForm(${post.id})" style="color:var(--text-dim);">Cancel</button>
+        <button class="disc-btn" style="padding:0.4rem 0.85rem; font-size:0.78rem;" onclick="submitDiscussionPost(${post.id}, event)">Send</button>
+      </div>
+    </div>
+  `;
+
+    // Add replies
+    const childReplies = replyMap[post.id] || [];
+    if (childReplies.length > 0) {
+      const repliesDiv = document.createElement('div');
+      repliesDiv.className = 'comment-replies';
+      childReplies.forEach(reply => {
+        repliesDiv.appendChild(buildCommentNode(reply, replyMap));
+      });
+      node.appendChild(repliesDiv);
+    }
+
+    return node;
+  }
+
+  function showReplyForm(postId, btn) {
+    const form = document.getElementById(`replyForm-${postId}`);
+    if (form) {
+      form.style.display = 'block';
+    }
+  }
+
+  function hideReplyForm(postId) {
+    const form = document.getElementById(`replyForm-${postId}`);
+    if (form) {
+      form.style.display = 'none';
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  async function submitDiscussionPost(parentId, event) {
+    if (event) event.preventDefault();
+
+    let authorName, content;
+
+    if (parentId) {
+      // Reply form
+      authorName = document.getElementById(`replyAuthor-${parentId}`).value.trim();
+      content = document.getElementById(`replyContent-${parentId}`).value.trim();
+    } else {
+      // Top-level form
+      authorName = document.getElementById('discAuthor').value.trim();
+      content = document.getElementById('discContent').value.trim();
+    }
+
+    if (!content) {
+      alert('Please enter your comment or doubt.');
+      return;
+    }
+
+    const payload = {
+      author_name: authorName || 'Anonymous Student',
+      content: content,
+      parent_id: parentId || null
+    };
+
+    try {
+      const res = await fetch(`/api/papers/${currentAiPaperId}/discussion`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error('POST failed');
+      const data = await res.json();
+
+      if (data.success) {
+        // Clear input fields
+        if (parentId) {
+          document.getElementById(`replyAuthor-${parentId}`).value = '';
+          document.getElementById(`replyContent-${parentId}`).value = '';
+          hideReplyForm(parentId);
+        } else {
+          document.getElementById('discAuthor').value = '';
+          document.getElementById('discContent').value = '';
+        }
+
+        // Reload the discussion thread
+        loadDiscussion(currentAiPaperId);
+      } else {
+        alert(data.error || 'Failed to post comment.');
+      }
+    } catch (e) {
+      console.error('Discussion post error:', e);
+      alert('Network error. Could not post comment.');
+    }
+  }
+
+  // ── Bookmarks / Favorites Management ─────────────────────────────────────────
+  let showBookmarksOnly = false;
+  let bookmarkedPaperIds = JSON.parse(localStorage.getItem('bookmarked_papers') || '[]');
+
+  // On page load, update the bookmarks count badge and check contribution statuses
+  document.addEventListener('DOMContentLoaded', () => {
+    updateBookmarkCountBadge();
+    checkContributionStatuses();
+  });
+
+  function getBookmarks() {
+    return bookmarkedPaperIds;
+  }
+
+  function isPaperBookmarked(paperId) {
+    return bookmarkedPaperIds.includes(String(paperId));
+  }
+
+  function updateBookmarkCountBadge() {
+    const badge = document.getElementById('bookmarkCount');
+    if (badge) {
+      badge.textContent = bookmarkedPaperIds.length;
+    }
+  }
+
+  function toggleBookmark(paperId, event) {
+    if (event) {
+      event.stopPropagation(); // prevent card clicks if any
+    }
+
+    const idStr = String(paperId);
+    const idx = bookmarkedPaperIds.indexOf(idStr);
+
+    let isAdded = false;
+    if (idx === -1) {
+      bookmarkedPaperIds.push(idStr);
+      isAdded = true;
+    } else {
+      bookmarkedPaperIds.splice(idx, 1);
+    }
+
+    // Save to LocalStorage
+    localStorage.setItem('bookmarked_papers', JSON.stringify(bookmarkedPaperIds));
+    updateBookmarkCountBadge();
+
+    // Update card UI state dynamically
+    const card = event ? event.target.closest('.paper-card') : null;
+    if (card) {
+      const btn = card.querySelector('.card-bookmark-btn');
+      if (btn) {
+        if (isAdded) {
+          btn.classList.add('active');
+          btn.innerHTML = '★';
+          btn.title = 'Remove Bookmark';
+        } else {
+          btn.classList.remove('active');
+          btn.innerHTML = '☆';
+          btn.title = 'Bookmark Paper';
+        }
+      }
+    }
+
+    // If in saved filter mode and we removed a bookmark, remove card from list dynamically
+    if (showBookmarksOnly && !isAdded) {
+      if (card) {
+        card.remove();
+        // If no cards left in grid, show empty state
+        const grid = document.getElementById('papersGrid');
+        if (grid && grid.children.length === 0) {
+          showEmptyBookmarksState();
+        }
+      }
+    }
+  }
+
+  function showEmptyBookmarksState() {
+    const empty = document.getElementById('emptyState');
+    const count = document.getElementById('resultCount');
+    const header = document.getElementById('resultsHeader');
+
+    if (empty) {
+      empty.style.display = 'block';
+      empty.innerHTML = `
+      <div class="empty-icon">⭐</div>
+      <p>No saved papers yet.</p>
+      <p>Click the star icon (☆) on any question paper card to save it here for quick access!</p>
+    `;
+    }
+    if (count) count.style.display = 'none';
+    if (header) header.style.display = 'none';
+  }
+
+  async function toggleBookmarksFilter() {
+    const btn = document.getElementById('bookmarkFilterBtn');
+    showBookmarksOnly = !showBookmarksOnly;
+
+    if (showBookmarksOnly) {
+      btn.style.background = 'linear-gradient(135deg, var(--apple-blue) 0%, var(--apple-indigo) 100%)';
+      btn.style.color = '#fff';
+      btn.style.borderColor = 'transparent';
+
+      // Fetch and display only bookmarked papers
+      if (bookmarkedPaperIds.length === 0) {
+        const grid = document.getElementById('papersGrid');
+        grid.innerHTML = '';
+        showEmptyBookmarksState();
+      } else {
+        setLoading(true);
+        try {
+          const res = await fetch('/api/papers/bookmarks', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ids: bookmarkedPaperIds })
+          });
+          if (!res.ok) throw new Error("Bookmarks fetch failed");
+          const papers = await res.json();
+          setLoading(false);
+          renderPapers(papers);
+          scrollToResults();
+        } catch (e) {
+          console.error(e);
+          setLoading(false);
+        }
+      }
+    } else {
+      // Return to normal styles
+      btn.style.background = 'transparent';
+      btn.style.color = 'var(--text-mid)';
+      btn.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+
+      // Perform standard fetch request
+      fetchPapers();
+    }
+  }
+
+  // ── Check Contribution Statuses & Alert Student ──────────────────────────────
+  async function checkContributionStatuses() {
+    const contributions = JSON.parse(localStorage.getItem('my_contributions') || '[]');
+    if (contributions.length === 0) return;
+
+    const pending = contributions.filter(c => c.status === 'pending');
+    if (pending.length === 0) return;
+
+    const pendingIds = pending.map(c => c.id);
+
+    try {
+      const res = await fetch('/api/papers/contributions/status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ids: pendingIds })
+      });
+      if (!res.ok) throw new Error("Status check failed");
+      const statuses = await res.json();
+
+      const statusMap = {};
+      statuses.forEach(s => {
+        statusMap[s.id] = s;
+      });
+
+      let hasChanges = false;
+      const updatedContributions = contributions.map(c => {
+        if (c.status === 'pending' && statusMap[c.id]) {
+          const currentServerState = statusMap[c.id];
+          if (currentServerState.status !== 'pending') {
+            hasChanges = true;
+            c.status = currentServerState.status;
+
+            showStatusToast(c, currentServerState.status);
+          }
+        }
+        return c;
+      });
+
+      if (hasChanges) {
+        localStorage.setItem('my_contributions', JSON.stringify(updatedContributions));
+      }
+    } catch (e) {
+      console.error("Failed to check contribution statuses:", e);
+    }
+  }
+
+  function showStatusToast(contribution, status) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast-alert ${status}`;
+
+    let emoji = status === 'approved' ? '🎉' : '❌';
+    let title = status === 'approved' ? 'Approved!' : 'Rejected';
+    let message = status === 'approved'
+      ? `Your contribution for <strong>${contribution.subject_code} - ${contribution.subject_name}</strong> has been approved by the Admin and is now live!`
+      : `Your contribution for <strong>${contribution.subject_code} - ${contribution.subject_name}</strong> was rejected by the admin.`;
+
+    toast.innerHTML = `
+    <div style="display:flex; align-items:center; gap:0.65rem;">
+      <span style="font-size:1.3rem;">${emoji}</span>
+      <div>
+        <div style="color:var(--text-bright); font-size:0.85rem; font-weight:600;">Contribution ${title}</div>
+        <div style="color:var(--text-mid); font-size:0.78rem; margin-top:0.2rem; line-height:1.4;">${message}</div>
+      </div>
+    </div>
+    <button class="toast-close" onclick="dismissToastAlert(this)">✕</button>
+  `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      dismissToastAlert(toast.querySelector('.toast-close'));
+    }, 8000);
+  }
+
+  function dismissToastAlert(btn) {
+    if (!btn) return;
+    const toast = btn.closest('.toast-alert');
+    if (toast) {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(15px)';
+      setTimeout(() => {
+        toast.remove();
+      }, 300);
+    }
+  }
+</script>
+{% endblock %}

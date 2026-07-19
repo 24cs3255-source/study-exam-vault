@@ -1,0 +1,740 @@
+{% extends "base.html" %}
+{% block title %}Welcome to EXAM-STUDY-VAULT{% endblock %}
+
+{% block content %}
+<style>
+  /* Import Plus Jakarta Sans Font */
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
+
+  /* Theme variables mapped to base.html design system */
+  .landing-wrap {
+    --primary: var(--apple-blue);
+    --primary-light: var(--apple-indigo);
+    --primary-gradient: linear-gradient(135deg, var(--apple-purple) 0%, var(--apple-indigo) 100%);
+    --accent: var(--apple-purple);
+    --text-hi: var(--text-hi);
+    --text-mid: var(--text-mid);
+    --text-lo: var(--text-lo);
+    --edge: var(--edge);
+    --edge-active: var(--edge-active);
+    --card: var(--card);
+    --glass: var(--panel);
+    --glass-edge: var(--edge);
+  }
+
+  /* Full viewport landing container */
+  .landing-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--text-mid);
+    background: transparent;
+    /* Remove solid background blocking the base.html canvas particles */
+    overflow-x: hidden;
+  }
+
+
+
+  /* Floating UI Widgets */
+  /* Floating UI Widgets */
+  .floating-widget {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    font-size: 1.3rem;
+    pointer-events: none;
+    animation: float 6s ease-in-out infinite alternate;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+
+    100% {
+      transform: translateY(-20px);
+    }
+  }
+
+  /* Distributed positions for clean emoji widgets */
+  .widget-search {
+    top: 15%;
+    left: 4%;
+    animation-delay: 0.1s;
+  }
+
+  .widget-file {
+    top: 48%;
+    left: 15%;
+    animation-delay: 0.5s;
+  }
+
+  .widget-chat {
+    top: 78%;
+    left: 5%;
+    animation-delay: 1.2s;
+  }
+
+  .widget-bulb {
+    top: 15%;
+    right: 4%;
+    animation-delay: 0.3s;
+  }
+
+  .widget-answers {
+    top: 48%;
+    right: 15%;
+    animation-delay: 0.7s;
+  }
+
+  .widget-letters {
+    top: 78%;
+    right: 5%;
+    animation-delay: 0.9s;
+  }
+
+  /* Hero Section */
+  .hero-section {
+    text-align: center;
+    margin-bottom: 3.5rem;
+    position: relative;
+    padding: 1.5rem 0 3rem;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin: 0 auto 1.5rem;
+    animation: fadeSlideUp 0.6s ease both;
+  }
+
+  .hero-eyebrow-line {
+    width: 32px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--apple-blue));
+  }
+
+  .hero-eyebrow-line.right {
+    background: linear-gradient(90deg, var(--apple-blue), transparent);
+  }
+
+  .hero-eyebrow span {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--apple-blue);
+  }
+
+  .hero-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(2.8rem, 8vw, 4.8rem);
+    font-weight: 800;
+    line-height: 1.1;
+    text-align: center;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.8rem;
+    animation: fadeSlideUp 0.7s 0.1s ease both;
+  }
+
+  .hero-title .line-1 {
+    display: block;
+    color: var(--text-hi);
+  }
+
+  .hero-title .line-2 {
+    display: block;
+    background: linear-gradient(135deg, var(--apple-blue) 0%, var(--apple-purple) 60%, #ff2d55 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 30px rgba(0, 122, 255, 0.25));
+  }
+
+  .hero-description {
+    font-size: 1.05rem;
+    color: var(--text-mid);
+    max-width: 520px;
+    text-align: center;
+    line-height: 1.6;
+    margin: 0 auto 2.2rem;
+    animation: fadeSlideUp 0.7s 0.2s ease both;
+  }
+
+  /* CTAs */
+  .hero-ctas {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    animation: fadeSlideUp 0.7s 0.3s ease both;
+  }
+
+  .btn-premium-solid {
+    position: relative;
+    background: linear-gradient(135deg, var(--apple-purple), var(--apple-blue));
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.85rem 2.2rem;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px var(--primary-glow);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+  }
+
+  .btn-premium-solid:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px var(--primary-glow);
+    filter: brightness(1.1);
+  }
+
+  .btn-premium-outline {
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    color: var(--text-hi);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.85rem 2.2rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(8px);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-premium-outline:hover {
+    background: var(--edge);
+    border-color: var(--edge-active);
+    transform: translateY(-2px);
+  }
+
+  /* Stats Section */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 5.5rem;
+    animation: fadeSlideUp 0.8s 0.4s ease both;
+  }
+
+  .stat-card {
+    text-align: center;
+    background: var(--card);
+    border: 1px solid var(--edge);
+    border-radius: 20px;
+    padding: 2rem 1.25rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--edge-active);
+    box-shadow: 0 12px 35px var(--primary-glow);
+  }
+
+  .stat-val {
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--apple-purple);
+    margin-bottom: 0.3rem;
+  }
+
+  .stat-lbl {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-lo);
+    font-weight: 700;
+  }
+
+  /* Features Grid Section */
+  .section-title {
+    text-align: center;
+    margin-bottom: 3.5rem;
+  }
+
+  .section-title h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-hi);
+    letter-spacing: -0.02em;
+  }
+
+  .section-title p {
+    color: var(--text-mid);
+    margin-top: 0.5rem;
+    font-size: 0.92rem;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 5.5rem;
+  }
+
+  .feature-card {
+    background: var(--card);
+    border: 1px solid var(--edge);
+    border-radius: 24px;
+    padding: 2.2rem 1.8rem;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(12px);
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--apple-purple), var(--apple-blue));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--edge-active);
+    box-shadow: 0 15px 40px var(--primary-glow);
+  }
+
+  .feature-card:hover::before {
+    opacity: 1;
+  }
+
+  .feature-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    color: var(--apple-purple);
+    transition: all 0.3s;
+  }
+
+  .feature-card:hover .feature-icon-box {
+    background: var(--apple-purple);
+    color: #fff;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px var(--primary-glow);
+  }
+
+  .feature-heading {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text-hi);
+    margin-bottom: 0.65rem;
+  }
+
+  .feature-desc {
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+  }
+
+  .feature-link {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--apple-blue);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.2s;
+  }
+
+  .feature-card:hover .feature-link {
+    color: var(--apple-indigo);
+    gap: 0.5rem;
+  }
+
+  /* Core Value Box */
+  .info-box {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    background: var(--card);
+    border: 1px solid var(--edge);
+    border-radius: 24px;
+    padding: 3rem;
+    margin-bottom: 5.5rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  .info-image-side {
+    flex: 1;
+    position: relative;
+  }
+
+  .info-image-card {
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(12px);
+  }
+
+  .info-text-side {
+    flex: 1.2;
+  }
+
+  .info-text-side h3 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-hi);
+    margin-bottom: 1.2rem;
+    letter-spacing: -0.02em;
+  }
+
+  .info-text-side p {
+    color: var(--text-mid);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    font-size: 0.88rem;
+  }
+
+  /* Footer Banner CTA */
+  .footer-cta {
+    text-align: center;
+    background: linear-gradient(180deg, var(--card) 0%, rgba(164, 139, 245, 0.03) 100%);
+    border: 1px solid var(--edge);
+    border-radius: 24px;
+    padding: 4rem 2rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(12px);
+  }
+
+  .footer-cta h3 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-hi);
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  .footer-cta p {
+    color: var(--text-mid);
+    max-width: 500px;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+    font-size: 0.88rem;
+  }
+
+  /* SVG Icon Styles */
+  .svg-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .info-box {
+      flex-direction: column;
+      padding: 2rem;
+      gap: 2rem;
+    }
+
+    .floating-widget {
+      display: none;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-ctas {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .hero-ctas a {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+    }
+  }
+</style>
+
+<div class="landing-wrap">
+
+  <!-- Hero Section -->
+  <header class="hero-section">
+    <!-- Floating Widgets -->
+    <div class="floating-widget widget-search" title="Search">🔍</div>
+    <div class="floating-widget widget-file" title="Papers">📄</div>
+    <div class="floating-widget widget-chat" title="Global Chat">🌐</div>
+    <div class="floating-widget widget-bulb" title="AI Assistant">💡</div>
+    <div class="floating-widget widget-answers" title="Answers">🎯</div>
+    <div class="floating-widget widget-letters" title="Discuss">💬</div>
+
+    <div class="hero-eyebrow">
+      <div class="hero-eyebrow-line"></div>
+      <span>AI-Powered study tools</span>
+      <div class="hero-eyebrow-line right"></div>
+    </div>
+
+    <h1 class="hero-title">
+      <span class="line-1">AI - STUDY</span>
+      <span class="line-2">EXAM VAULT </span>
+    </h1>
+
+
+
+    <div class="hero-ctas">
+      <a href="/explore" class="btn-premium-solid">
+        Search Papers
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"
+          stroke-linecap="round" stroke-linejoin="round" style="margin-left: 0.2rem;">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </a>
+      {% if not session.get('student_logged_in') and not session.get('admin_logged_in') %}
+      <a href="/student/login" class="btn-premium-outline">
+        Student Login
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </a>
+      <a href="/login" class="btn-premium-outline">
+        Staff Login
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </a>
+      {% elif session.get('student_logged_in') %}
+      <a href="/student/dashboard" class="btn-premium-outline">
+        Go to Dashboard
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+          <line x1="9" y1="9" x2="21" y2="9"></line>
+          <line x1="9" y1="15" x2="21" y2="15"></line>
+        </svg>
+      </a>
+      {% else %}
+      <a href="/admin" class="btn-premium-outline">
+        Admin Portal
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+          </path>
+        </svg>
+      </a>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- Statistics Counter Section -->
+  <section class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-val">1,200+</div>
+      <div class="stat-lbl">Curated Papers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">24/7</div>
+      <div class="stat-lbl">AI Study Buddy</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">99%</div>
+      <div class="stat-lbl">Exam Readiness</div>
+    </div>
+  </section>
+
+  <!-- Section Features Title -->
+  <div class="section-title">
+    <h2>Core Capabilities</h2>
+    <p>Everything you need to secure top marks in your semester exams.</p>
+  </div>
+
+  <!-- Features Cards Showcase -->
+  <section class="features-grid">
+
+    <!-- Feature 1: Exam Papers -->
+    <div class="feature-card">
+      <div class="feature-icon-box">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+      </div>
+      <h3 class="feature-heading">Curated Archives</h3>
+      <p class="feature-desc">
+        Browse semester question papers organized cleanly by department, course year, and semester block. Download or
+        preview instantly.
+      </p>
+      <a href="/explore" class="feature-link">Explore Papers &rarr;</a>
+    </div>
+
+    <!-- Feature 2: Gemini AI Study Guide -->
+    <div class="feature-card">
+      <div class="feature-icon-box">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 22 22 22"></polygon>
+          <path d="M12 8v4"></path>
+          <path d="M12 16h.01"></path>
+        </svg>
+      </div>
+      <h3 class="feature-heading">AI Study Assistant</h3>
+      <p class="feature-desc">
+        Equipped with AI to analyze files, generate detailed 2-mark model answers, chat with you, and
+        review study topics.
+      </p>
+      <a href="/explore" class="feature-link">Try AI Guide &rarr;</a>
+    </div>
+
+    <!-- Feature 3: Mock Exam Simulator -->
+    <div class="feature-card">
+      <div class="feature-icon-box">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <h3 class="feature-heading">Mock Simulator</h3>
+      <p class="feature-desc">
+        Practice under semester conditions with a full 3-hour timer, interactive workspace, autosave, and grading
+        dashboard.
+      </p>
+      <a href="/explore" class="feature-link">Start Mock Exam &rarr;</a>
+    </div>
+
+    <!-- Feature 4: Departmental Chatrooms -->
+    <div class="feature-card">
+      <div class="feature-icon-box">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+      <h3 class="feature-heading">Shared Groups</h3>
+      <p class="feature-desc">
+        Collaborate with peers, ask questions, share study resources, and get quick answers directly in
+        department-specific chat groups.
+      </p>
+      <a href="/student/groups" class="feature-link">Join Chatrooms &rarr;</a>
+    </div>
+
+  </section>
+
+  <!-- Interactive Section / Context Box -->
+  <section class="info-box">
+    <div class="info-image-side">
+      <div class="info-image-card">
+        <h4
+          style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--apple-purple); font-weight:700; margin-bottom:0.75rem;">
+          AI Integration</h4>
+        <div style="font-size:1rem; font-weight:700; color:var(--text-hi); margin-bottom:0.5rem; line-height:1.2;">
+          Google Gemini AI Integration</div>
+        <p style="font-size:0.8rem; color:var(--text-mid); line-height:1.5; margin-bottom:1rem;">
+          Our advanced integration uses Google Gemini to synthesize information from uploaded papers for lightning-fast
+          analysis and synthesized academic content.
+        </p>
+        <div
+          style="background:rgba(255, 255, 255, 0.02); border:1px solid var(--edge); padding:0.75rem; border-radius:10px; font-family:'Courier New',Courier,monospace; font-size:0.7rem; color:var(--apple-purple);">
+          $ client.models.generate_content(<br>
+          &nbsp;&nbsp;model="gemini-1.5-flash",<br>
+          &nbsp;&nbsp;contents=[pdf_file, "Generate 2-Mark Solutions"]<br>
+          )
+        </div>
+      </div>
+    </div>
+    <div class="info-text-side">
+      <h3>Designed for College Excellence</h3>
+      <p>
+        EXAM-STUDY-VAULT bridges the gap between study materials and interactive learning. Instead of just reading
+        static PDFs, students can learn actively through AI-guided analysis, test simulation, and departmental
+        collaboration.
+      </p>
+      <p style="margin-bottom:2rem;">
+        Log in to unlock badges, track your mock exam records, and study together with friends in live study rooms.
+      </p>
+      <a href="/student/register" class="btn-premium-solid"
+        style="text-decoration:none; font-size:0.88rem; padding:0.75rem 1.6rem;">
+        Register Now
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer Banner CTA -->
+  <section class="footer-cta">
+    <h3>Ready to Elevate Your Preparation?</h3>
+    <p>Sign up now to start studying with EXAM-STUDY-VAULT AI Study Assistant and practice with Mock Exams.</p>
+    <div class="hero-ctas">
+      <a href="/explore" class="btn-premium-solid" style="text-decoration:none;">
+        Go to Portal
+      </a>
+      {% if not session.get('student_logged_in') %}
+      <a href="/student/register" class="btn-premium-outline" style="text-decoration:none;">
+        Sign Up Free
+      </a>
+      {% endif %}
+    </div>
+  </section>
+
+</div>
+{% endblock %}
